@@ -88,9 +88,24 @@ model UnauthorizedProblem {
   ...ProblemDetails;
 }
 
+@doc("The account of the signed-in user.")
+model CurrentUser {
+  @doc("Identifier of the account.")
+  @format("uuid")
+  id: string;
+
+  @doc("Normalised email address of the account.")
+  email: string;
+}
+
 @route("/auth")
 @tag("Identity")
 interface Identity {
+  @doc("Return the account of the signed-in user. Requires a valid bearer token.")
+  @route("/me")
+  @get
+  me(): CurrentUser | UnauthorizedProblem;
+
   @doc("Log in with email and password and receive a JWT. Does not require authentication.")
   @route("/login")
   @post

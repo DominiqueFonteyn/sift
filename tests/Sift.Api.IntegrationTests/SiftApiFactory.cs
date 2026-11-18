@@ -8,6 +8,8 @@ public sealed class SiftApiFactory : WebApplicationFactory<Program>
 {
     private readonly string databasePath = Path.Combine(Path.GetTempPath(), $"sift-tests-{Guid.NewGuid():N}.db");
 
+    public const string TestSigningKey = "integration-tests-only-signing-key-0123456789";
+
     public string DatabaseConnectionString => $"Data Source={databasePath};Pooling=False";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -15,6 +17,7 @@ public sealed class SiftApiFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Development");
         // Program reads the connection string while building, before ConfigureAppConfiguration overrides apply.
         builder.UseSetting("ConnectionStrings:Sift", $"Data Source={databasePath}");
+        builder.UseSetting("Jwt:SigningKey", TestSigningKey);
     }
 
     protected override void Dispose(bool disposing)
