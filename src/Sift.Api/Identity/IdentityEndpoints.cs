@@ -53,15 +53,15 @@ public static class IdentityEndpoints
                 ICurrentUserQuery query,
                 CancellationToken cancellationToken) =>
             {
-                if (!Guid.TryParse(principal.FindFirstValue("sub"), out var userId))
+                if (!principal.TryGetUserId(out var userId))
                 {
-                    return ProblemResults.Unauthorized("The access token is invalid.");
+                    return ProblemResults.InvalidToken();
                 }
 
                 var user = await query.GetAsync(userId, cancellationToken);
 
                 return user is null
-                    ? ProblemResults.Unauthorized("The access token is invalid.")
+                    ? ProblemResults.InvalidToken()
                     : Results.Ok(new CurrentUserResponse(user.Id, user.Email));
             })
             .WithName("Identity_me")

@@ -2,7 +2,8 @@
   "name": "sift",
   "private": true,
   "scripts": {
-    "tsp": "tsp"
+    "tsp": "tsp",
+    "gen": "tsp compile api && yarn --cwd src/Sift.Web generate:api"
   },
   "devDependencies": {
     "@typespec/compiler": "^1.4.0",

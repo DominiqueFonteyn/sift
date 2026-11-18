@@ -1,5 +1,6 @@
 import "@typespec/http";
 import "@typespec/openapi";
+import "./bureaus.tsp";
 import "./health.tsp";
 import "./identity.tsp";
 
