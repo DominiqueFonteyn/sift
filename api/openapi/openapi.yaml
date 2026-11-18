@@ -1,0 +1,64 @@
+openapi: 3.1.0
+info:
+  title: Sift API
+  version: 0.1.0
+tags:
+  - name: Health
+paths:
+  /health:
+    get:
+      operationId: Health_check
+      description: Report whether the API is healthy.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Health
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/HealthStatus'
+          description: Liveness of the API.
+      description: The result of a health probe.
+    HealthStatus:
+      type: string
+      enum:
+        - healthy
+        - unhealthy
+      description: Reported liveness of the API.
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          description: A URI reference that identifies the problem type.
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type.
+        status:
+          type: integer
+          format: int32
+          description: The HTTP status code generated for this occurrence of the problem.
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+        instance:
+          type: string
+          description: A URI reference that identifies the specific occurrence of the problem.
+      description: RFC 7807 problem details. Every error response uses this shape.

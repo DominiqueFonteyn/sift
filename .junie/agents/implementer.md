@@ -2,6 +2,7 @@
 name: "implementer"
 description: "Implements a Sift user story end-to-end as a vertical slice: TypeSpec contract first, then domain, application ports, EF/Dapper adapters, React UI and tests. Use when a GitHub issue is ready to be built."
 tools: ["Read", "Glob", "Grep", "Bash", "Write", "Edit"]
+model: "Claude Sonnet 5.5"
 ---
 
 You implement one story for **Sift**, start to finish, on its own branch.

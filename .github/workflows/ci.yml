@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build
+        run: dotnet build --configuration Release
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build
+
+  contract-and-frontend:
+    name: Contract and frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Enable Yarn
+        run: corepack enable
+
+      - name: Install contract tooling
+        run: yarn install --frozen-lockfile
+
+      - name: Compile the TypeSpec contract
+        run: yarn tsp compile api
+
+      - name: Fail if the generated OpenAPI document is stale
+        run: git diff --exit-code api/openapi
+
+      - name: Install frontend dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: src/Sift.Web
+
+      - name: Regenerate the API client
+        run: yarn generate:api
+        working-directory: src/Sift.Web
+
+      - name: Fail if the generated client is stale
+        run: git diff --exit-code src/Sift.Web/src/api/generated
+
+      - name: Build
+        run: yarn build
+        working-directory: src/Sift.Web
+
+  e2e:
+    name: End-to-end
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Enable Yarn
+        run: corepack enable
+
+      - name: Install frontend dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: src/Sift.Web
+
+      - name: Install E2E dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: tests/Sift.E2E
+
+      - name: Install Playwright browser
+        run: yarn playwright install --with-deps chromium
+        working-directory: tests/Sift.E2E
+
+      - name: Run Playwright tests
+        run: yarn test
+        working-directory: tests/Sift.E2E
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            tests/Sift.E2E/test-results/
+            tests/Sift.E2E/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7

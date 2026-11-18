@@ -1,0 +1,33 @@
+# .NET
+bin/
+obj/
+*.user
+artifacts/
+TestResults/
+*.db
+*.db-shm
+*.db-wal
+
+# Node
+node_modules/
+.yarn/
+.pnp.*
+dist/
+.vite/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# Tooling / editors
+.vs/
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Environment
+.env
+.env.local

@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sift.Application\Sift.Application.csproj" />
+    <ProjectReference Include="..\Sift.Domain\Sift.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.89" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

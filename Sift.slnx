@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Sift.Api/Sift.Api.csproj" />
+    <Project Path="src/Sift.Application/Sift.Application.csproj" />
+    <Project Path="src/Sift.Domain/Sift.Domain.csproj" />
+    <Project Path="src/Sift.Infrastructure/Sift.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Sift.Api.IntegrationTests/Sift.Api.IntegrationTests.csproj" />
+    <Project Path="tests/Sift.Application.Tests/Sift.Application.Tests.csproj" />
+    <Project Path="tests/Sift.Domain.Tests/Sift.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
