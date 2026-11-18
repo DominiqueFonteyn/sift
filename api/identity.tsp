@@ -55,12 +55,52 @@ model ConflictProblem {
   ...ProblemDetails;
 }
 
+@doc("The credentials of an existing account.")
+model LoginRequest {
+  @doc("Email address of the account.")
+  @minLength(1)
+  @maxLength(254)
+  email: string;
+
+  @doc("Plain-text password of the account.")
+  @minLength(1)
+  @maxLength(128)
+  @secret
+  password: string;
+}
+
+@doc("A signed-in session. Send the token as a bearer token on protected requests.")
+model LoginResponse {
+  @doc("Signed JWT containing the user id and an expiry.")
+  accessToken: string;
+
+  @doc("Always Bearer.")
+  tokenType: "Bearer";
+
+  @doc("When the token expires, in UTC.")
+  expiresAt: utcDateTime;
+}
+
+@doc("The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.")
+@error
+model UnauthorizedProblem {
+  @statusCode _: 401;
+  ...ProblemDetails;
+}
+
 @route("/auth")
 @tag("Identity")
 interface Identity {
+  @doc("Log in with email and password and receive a JWT. Does not require authentication.")
+  @route("/login")
+  @post
+  @useAuth(NoAuth)
+  login(@body request: LoginRequest): LoginResponse | BadRequestProblem | UnauthorizedProblem;
+
   @doc("Register a new account. Does not require authentication.")
   @route("/register")
   @post
+  @useAuth(NoAuth)
   register(@body request: RegisterRequest): {
     @statusCode _: 201;
     @body body: RegisteredUser;

@@ -7,6 +7,7 @@ using Http;
 using OpenAPI;
 
 @service(#{ title: "Sift API" })
+@useAuth(BearerAuth)
 @info(#{ version: "0.1.0" })
 namespace Sift;
 

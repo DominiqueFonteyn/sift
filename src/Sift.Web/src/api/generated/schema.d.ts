@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Log in with email and password and receive a JWT. Does not require authentication. */
+        post: operations["Identity_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/register": {
         parameters: {
             query?: never;
@@ -52,6 +69,31 @@ export interface components {
          * @enum {string}
          */
         HealthStatus: "healthy" | "unhealthy";
+        /** @description The credentials of an existing account. */
+        LoginRequest: {
+            /** @description Email address of the account. */
+            email: string;
+            /**
+             * Format: password
+             * @description Plain-text password of the account.
+             */
+            password: string;
+        };
+        /** @description A signed-in session. Send the token as a bearer token on protected requests. */
+        LoginResponse: {
+            /** @description Signed JWT containing the user id and an expiry. */
+            accessToken: string;
+            /**
+             * @description Always Bearer.
+             * @enum {string}
+             */
+            tokenType: "Bearer";
+            /**
+             * Format: date-time
+             * @description When the token expires, in UTC.
+             */
+            expiresAt: string;
+        };
         /** @description RFC 7807 problem details. Every error response uses this shape. */
         ProblemDetails: {
             /** @description A URI reference that identifies the problem type. */
@@ -125,6 +167,48 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    Identity_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description The request was rejected because one or more fields are invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationProblemDetails"];
+                };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     Identity_register: {
         parameters: {
             query?: never;

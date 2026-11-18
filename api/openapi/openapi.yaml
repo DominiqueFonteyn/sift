@@ -6,6 +6,40 @@ tags:
   - name: Health
   - name: Identity
 paths:
+  /auth/login:
+    post:
+      operationId: Identity_login
+      description: Log in with email and password and receive a JWT. Does not require authentication.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: The request was rejected because one or more fields are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '401':
+          description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Identity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      security:
+        - {}
   /auth/register:
     post:
       operationId: Identity_register
@@ -38,6 +72,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/RegisterRequest'
+      security:
+        - {}
   /health:
     get:
       operationId: Health_check
@@ -58,6 +94,10 @@ paths:
                 $ref: '#/components/schemas/ProblemDetails'
       tags:
         - Health
+      security:
+        - {}
+security:
+  - BearerAuth: []
 components:
   schemas:
     HealthResponse:
@@ -75,6 +115,44 @@ components:
         - healthy
         - unhealthy
       description: Reported liveness of the API.
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          minLength: 1
+          maxLength: 254
+          description: Email address of the account.
+        password:
+          type: string
+          minLength: 1
+          maxLength: 128
+          format: password
+          description: Plain-text password of the account.
+      description: The credentials of an existing account.
+    LoginResponse:
+      type: object
+      required:
+        - accessToken
+        - tokenType
+        - expiresAt
+      properties:
+        accessToken:
+          type: string
+          description: Signed JWT containing the user id and an expiry.
+        tokenType:
+          type: string
+          enum:
+            - Bearer
+          description: Always Bearer.
+        expiresAt:
+          type: string
+          format: date-time
+          description: When the token expires, in UTC.
+      description: A signed-in session. Send the token as a bearer token on protected requests.
     ProblemDetails:
       type: object
       properties:
@@ -162,3 +240,7 @@ components:
               type: string
           description: Validation messages keyed by the request field they apply to.
       description: Problem details for a rejected request, listing the offending fields.
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: Bearer

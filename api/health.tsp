@@ -21,5 +21,6 @@ model HealthResponse {
 interface Health {
   @doc("Report whether the API is healthy.")
   @get
+  @useAuth(NoAuth)
   check(): HealthResponse | ProblemDetails;
 }
