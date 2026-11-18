@@ -26,7 +26,8 @@ Everything that does not serve that sentence is deferred.
 2. **No AI in the matcher.** The first matcher is a transparent rule engine (requirement term found in vacancy text → met; unmet must-have → capped score). It is testable, free and fast, and it establishes the port that an LLM adapter can implement later.
 3. **SQLite.** Single file, zero infra. EF Core for writes and Dapper for reads from day one so the hexagonal boundaries are exercised; the provider swap to Postgres/SQL Server stays a config change.
 4. **One resume per user.** Removes "default resume" selection from every screen and API.
-5. **Hexagonal from the first commit.** Even thin slices go domain → port → adapter, because retrofitting the architecture later is what actually costs time.
+5. **Token in localStorage.** The web app keeps the JWT in `localStorage` (simple, survives reloads). Acceptable for the MVP; revisit with refresh tokens and safer storage post-MVP.
+6. **Hexagonal from the first commit.** Even thin slices go domain → port → adapter, because retrofitting the architecture later is what actually costs time.
 
 ## Walking skeleton (definition of "MVP done")
 
