@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Sift.Api.Errors;
 using Sift.Api.Identity;
 using Sift.Application.Bureaus;
+using Sift.Application.Common;
 
 namespace Sift.Api.Bureaus;
 
@@ -19,7 +20,7 @@ public static class BureauEndpoints
             {
                 if (!principal.TryGetUserId(out var userId))
                 {
-                    return ProblemResults.Unauthorized("The access token is invalid.");
+                    return ProblemResults.InvalidToken();
                 }
 
                 var result = await handler.HandleAsync(new CreateBureauCommand(userId, request.Name), cancellationToken);
@@ -36,18 +37,29 @@ public static class BureauEndpoints
             .WithName("Bureaus_create");
 
         group.MapGet("/", async (
+                string? page,
+                string? pageSize,
                 ClaimsPrincipal principal,
                 IBureauQueries queries,
                 CancellationToken cancellationToken) =>
             {
                 if (!principal.TryGetUserId(out var userId))
                 {
-                    return ProblemResults.Unauthorized("The access token is invalid.");
+                    return ProblemResults.InvalidToken();
                 }
 
-                var bureaus = await queries.ListAsync(userId, cancellationToken);
+                if (!PageRequest.TryCreate(page, pageSize, out var pageRequest, out var errors))
+                {
+                    return ProblemResults.Validation(errors);
+                }
 
-                return Results.Ok(bureaus.Select(bureau => new BureauResponse(bureau.Id, bureau.Name, bureau.CreatedAt)));
+                var bureaus = await queries.ListAsync(userId, pageRequest, cancellationToken);
+
+                return Results.Ok(new BureauPageResponse(
+                    bureaus.Items.Select(bureau => new BureauResponse(bureau.Id, bureau.Name, bureau.CreatedAt)).ToList(),
+                    bureaus.Total,
+                    pageRequest.Page,
+                    pageRequest.PageSize));
             })
             .WithName("Bureaus_list");
 
@@ -60,7 +72,7 @@ public static class BureauEndpoints
             {
                 if (!principal.TryGetUserId(out var userId))
                 {
-                    return ProblemResults.Unauthorized("The access token is invalid.");
+                    return ProblemResults.InvalidToken();
                 }
 
                 if (!Guid.TryParse(id, out var bureauId))

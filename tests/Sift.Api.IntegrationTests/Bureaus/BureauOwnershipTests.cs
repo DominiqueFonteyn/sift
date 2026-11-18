@@ -65,8 +65,51 @@ public sealed class BureauOwnershipTests(SiftApiFactory factory) : IClassFixture
 
         var list = await userB.GetFromJsonAsync<JsonElement>("/bureaus");
 
-        var names = list.EnumerateArray().Select(item => item.GetProperty("name").GetString()).ToArray();
-        Assert.Equal(new[] { "B-one" }, names);
+        Assert.Equal(new[] { "B-one" }, Names(list));
+        Assert.Equal(1, list.GetProperty("total").GetInt32());
+    }
+
+    [Fact]
+    public async Task Listing_is_paged_oldest_first_and_counts_only_the_callers_bureaus()
+    {
+        using var owner = await AuthenticatedClient.CreateSignedInAsync(factory);
+        using var other = await AuthenticatedClient.CreateSignedInAsync(factory);
+        foreach (var name in new[] { "one", "two", "three", "four", "five" })
+        {
+            await CreateAsync(owner, name);
+        }
+        await CreateAsync(other, "foreign");
+
+        var first = await owner.GetFromJsonAsync<JsonElement>("/bureaus?page=1&pageSize=2");
+        var last = await owner.GetFromJsonAsync<JsonElement>("/bureaus?page=3&pageSize=2");
+        var beyond = await owner.GetFromJsonAsync<JsonElement>("/bureaus?page=4&pageSize=2");
+        var defaults = await owner.GetFromJsonAsync<JsonElement>("/bureaus");
+
+        Assert.Equal(new[] { "one", "two" }, Names(first));
+        Assert.Equal(new[] { "five" }, Names(last));
+        Assert.Empty(Names(beyond));
+        Assert.All(new[] { first, last, beyond, defaults }, page => Assert.Equal(5, page.GetProperty("total").GetInt32()));
+        Assert.Equal(3, last.GetProperty("page").GetInt32());
+        Assert.Equal(2, last.GetProperty("pageSize").GetInt32());
+        Assert.Equal(1, defaults.GetProperty("page").GetInt32());
+        Assert.Equal(20, defaults.GetProperty("pageSize").GetInt32());
+    }
+
+    [Theory]
+    [InlineData("page=0", "page")]
+    [InlineData("page=abc", "page")]
+    [InlineData("pageSize=0", "pageSize")]
+    [InlineData("pageSize=101", "pageSize")]
+    public async Task An_invalid_page_or_page_size_is_a_400_problem(string query, string field)
+    {
+        using var client = await AuthenticatedClient.CreateSignedInAsync(factory);
+
+        var response = await client.GetAsync($"/bureaus?{query}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        var errors = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors");
+        Assert.Equal(field, Assert.Single(errors.EnumerateObject()).Name);
     }
 
     [Fact]
@@ -82,7 +125,7 @@ public sealed class BureauOwnershipTests(SiftApiFactory factory) : IClassFixture
         var id = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
         Assert.Equal(HttpStatusCode.OK, (await attacker.GetAsync($"/bureaus/{id}")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await victim.GetAsync($"/bureaus/{id}")).StatusCode);
-        Assert.Empty((await victim.GetFromJsonAsync<JsonElement>("/bureaus")).EnumerateArray());
+        Assert.Empty(Names(await victim.GetFromJsonAsync<JsonElement>("/bureaus")));
     }
 
     [Fact]
@@ -94,7 +137,15 @@ public sealed class BureauOwnershipTests(SiftApiFactory factory) : IClassFixture
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        var errors = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors");
+        var name = Assert.Single(errors.EnumerateObject());
+        Assert.Equal("name", name.Name);
+        Assert.Equal("A bureau needs a name.", Assert.Single(name.Value.EnumerateArray()).GetString());
+        Assert.Empty(Names(await client.GetFromJsonAsync<JsonElement>("/bureaus")));
     }
+
+    private static string?[] Names(JsonElement page) =>
+        page.GetProperty("items").EnumerateArray().Select(item => item.GetProperty("name").GetString()).ToArray();
 
     private static async Task<JsonElement> CreateAsync(HttpClient client, string name)
     {

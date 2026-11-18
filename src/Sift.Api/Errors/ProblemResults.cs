@@ -14,6 +14,8 @@ public static class ProblemResults
             title: "Authentication failed.",
             detail: detail);
 
+    public static IResult InvalidToken() => Unauthorized("The access token is invalid.");
+
     // One fixed body so a foreign resource looks exactly like a missing one.
     public static IResult NotFound() =>
         Results.Problem(

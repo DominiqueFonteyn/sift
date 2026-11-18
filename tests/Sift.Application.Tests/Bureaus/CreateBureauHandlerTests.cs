@@ -32,7 +32,9 @@ public sealed class CreateBureauHandlerTests
         var result = await handler.HandleAsync(new CreateBureauCommand(Guid.NewGuid(), " "), CancellationToken.None);
 
         var invalid = Assert.IsType<CreateBureauResult.Invalid>(result);
-        Assert.Contains(CreateBureauHandler.NameField, invalid.Errors.Keys);
+        var (field, messages) = Assert.Single(invalid.Errors);
+        Assert.Equal(CreateBureauHandler.NameField, field);
+        Assert.Equal("A bureau needs a name.", Assert.Single(messages));
         Assert.Empty(bureaus.Added);
     }
 

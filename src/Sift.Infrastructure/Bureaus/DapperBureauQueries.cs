@@ -1,6 +1,7 @@
 using System.Globalization;
 using Dapper;
 using Sift.Application.Bureaus;
+using Sift.Application.Common;
 using Sift.Infrastructure.Persistence;
 
 namespace Sift.Infrastructure.Bureaus;
@@ -9,18 +10,23 @@ public sealed class DapperBureauQueries(ISiftConnectionFactory connectionFactory
 {
     private sealed record Row(string Id, string Name, string CreatedAt);
 
-    public async Task<IReadOnlyList<BureauReadModel>> ListAsync(Guid ownerId, CancellationToken cancellationToken)
+    public async Task<PagedResult<BureauReadModel>> ListAsync(Guid ownerId, PageRequest page, CancellationToken cancellationToken)
     {
         await using var connection = await connectionFactory.OpenAsync(cancellationToken);
 
         var command = new CommandDefinition(
-            "select Id, Name, CreatedAt from Bureaus where OwnerId = @OwnerId order by CreatedAt, Id;",
-            new { OwnerId = ownerId },
+            """
+            select count(*) from Bureaus where OwnerId = @OwnerId;
+            select Id, Name, CreatedAt from Bureaus where OwnerId = @OwnerId order by CreatedAt, Id limit @Limit offset @Offset;
+            """,
+            new { OwnerId = ownerId, Limit = page.PageSize, Offset = page.Offset },
             cancellationToken: cancellationToken);
 
-        var rows = await connection.QueryAsync<Row>(command);
+        await using var results = await connection.QueryMultipleAsync(command);
+        var total = await results.ReadSingleAsync<int>();
+        var rows = await results.ReadAsync<Row>();
 
-        return rows.Select(ToReadModel).ToList();
+        return new PagedResult<BureauReadModel>(rows.Select(ToReadModel).ToList(), total);
     }
 
     public async Task<BureauReadModel?> GetAsync(Guid ownerId, Guid bureauId, CancellationToken cancellationToken)
