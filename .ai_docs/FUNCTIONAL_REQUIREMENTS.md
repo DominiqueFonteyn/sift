@@ -19,7 +19,7 @@ pull requests can reference it.
   - Passwords must be 8–128 characters; violations return `400` with the offending field (`password` or `email`) under `errors`.
   - Only a salted PBKDF2 (SHA-256) hash is stored; the password and hash are never returned.
 - **FR-1.2** A user can log in and receives a JWT access token.
-- **FR-1.3** Every API endpoint except register/login requires a valid JWT.
+- **FR-1.3** Every API endpoint except register, login and `/health` (liveness probes) requires a valid JWT.
 - **FR-1.4** A user can only read or modify resources they own; another user's data must never be returned (404/403, never a leak).
 - **FR-1.5** A user can log out (client-side token discard; server-side refresh/revocation is post-MVP).
 

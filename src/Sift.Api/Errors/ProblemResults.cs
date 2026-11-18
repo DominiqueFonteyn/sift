@@ -8,6 +8,12 @@ public static class ProblemResults
             title: "One or more validation errors occurred.",
             statusCode: StatusCodes.Status400BadRequest);
 
+    public static IResult Unauthorized(string detail) =>
+        Results.Problem(
+            statusCode: StatusCodes.Status401Unauthorized,
+            title: "Authentication failed.",
+            detail: detail);
+
     public static IResult Conflict(string detail) =>
         Results.Problem(
             statusCode: StatusCodes.Status409Conflict,

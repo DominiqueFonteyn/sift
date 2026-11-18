@@ -12,14 +12,18 @@ namespace Sift.Infrastructure;
 
 public static class InfrastructureServiceCollectionExtensions
 {
-    public static IServiceCollection AddSiftInfrastructure(this IServiceCollection services, string connectionString)
+    public static IServiceCollection AddSiftInfrastructure(this IServiceCollection services, string connectionString, JwtOptions jwtOptions)
     {
+        jwtOptions.EnsureValid();
+        services.AddSingleton(jwtOptions);
+        services.AddSingleton<ITokenIssuer, JwtTokenIssuer>();
         services.AddDbContext<SiftDbContext>(options => options.UseSqlite(connectionString));
         services.AddSingleton<ISiftConnectionFactory>(_ => new SqliteConnectionFactory(connectionString));
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddScoped<IDatabaseProbe, SqliteDatabaseProbe>();
         services.AddScoped<IUserRepository, EfUserRepository>();
+        services.AddScoped<ICurrentUserQuery, DapperCurrentUserQuery>();
 
         return services;
     }

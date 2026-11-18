@@ -7,9 +7,10 @@ function uniqueEmail(): string {
 }
 
 async function submitRegistration(page: Page, email: string, password: string): Promise<void> {
-  await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
-  await page.getByRole('button', { name: 'Register' }).click();
+  const form = page.getByRole('region', { name: 'Registration' });
+  await form.getByLabel('Email').fill(email);
+  await form.getByLabel('Password').fill(password);
+  await form.getByRole('button', { name: 'Register' }).click();
 }
 
 test('a visitor can register an account', async ({ page }) => {
@@ -39,6 +40,9 @@ test('a password that is too short is reported on the password field', async ({ 
   await submitRegistration(page, uniqueEmail(), 'short');
 
   await expect(page.locator('#register-password-errors')).toContainText('at least 8 characters');
-  await expect(page.getByLabel('Password')).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.getByRole('region', { name: 'Registration' }).getByLabel('Password')).toHaveAttribute(
+    'aria-invalid',
+    'true',
+  );
   await expect(page.getByTestId('register-success')).toHaveCount(0);
 });
