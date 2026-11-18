@@ -37,6 +37,36 @@ requirement (FR-x.y)
 
 A human merges. Agents never merge their own pull requests.
 
+## Slash commands
+
+Each hand-off in the loop has a project slash command in `.junie/commands/`. Run one per prompt and
+check the result before the next; the issue number carries state between stages.
+
+| Command                  | Delegates to   | Stage                                             |
+| ------------------------ | -------------- | ------------------------------------------------- |
+| `/story requirement=FR-2.1` | `story-writer` | Slice a requirement into issues                   |
+| `/review-story issue=12` | `reviewer`     | Review the issue as a story                       |
+| `/implement issue=12`    | `implementer`  | Build the slice on `feat/12-<slug>`, no PR        |
+| `/review issue=12`       | `reviewer`     | Review the implementation; APPROVE / REQUEST CHANGES |
+| `/open-pr issue=12`      | `pr-author`    | Push and open the PR; a human merges              |
+
+On REQUEST CHANGES, run `/implement issue=12` again with the findings, then `/review issue=12`.
+
+### Running the whole loop
+
+`/ship` orchestrates every stage above in one prompt, delegating each to its agent and enforcing the
+gates. It runs in the main session (not as a custom agent) because it has to hand work to the other
+agents.
+
+| Command                     | Runs                                                               |
+| --------------------------- | ------------------------------------------------------------------ |
+| `/ship requirement=FR-2.1`  | story → story review → implement ⇄ review → PR, for each new issue |
+| `/ship issue=12`            | story review → implement ⇄ review → PR, for an existing issue      |
+
+Gates: at most 2 story revision rounds and 3 implement/review rounds, then it stops and reports. It
+does not open a PR without APPROVE, and it never merges. Use the single-stage commands when you want
+to check each hand-off yourself.
+
 ## Conventions
 
 - **Labels:** `story`, `bug`, `spike`, `post-mvp`, plus a milestone label `M0`–`M4`.
