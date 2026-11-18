@@ -4,8 +4,8 @@ Sift helps a job seeker manage recruiters, recruitment bureaus and vacancies, an
 vacancy against their resume and their own must-have / nice-to-have requirements — so the evening
 goes to the three roles that fit instead of the thirty that do not.
 
-Status: **planning complete, implementation not started.** The first story is
-[#1 — walking skeleton](https://github.com/DominiqueFonteyn/sift/issues/1).
+Status: **walking skeleton in place.** The contract, the hexagonal solution, the React shell and the
+test harness are wired together; business features start from there.
 
 ## Documentation
 
@@ -24,5 +24,29 @@ reads · SQLite for the MVP · React + TypeScript + Vite + Tailwind/SCSS · JWT 
 
 ## Getting started
 
-Nothing to run yet. The toolchain you will need: .NET SDK 10, Node 22+, Yarn (`corepack enable`)
-and the GitHub CLI.
+Toolchain: .NET SDK 10, Node 22+, Yarn (`corepack enable`) and the GitHub CLI.
+
+```bash
+corepack enable
+
+# contract first: regenerate the OpenAPI document
+yarn install
+yarn tsp compile api
+
+# backend
+dotnet build
+dotnet test
+dotnet run --project src/Sift.Api          # http://localhost:5100/health
+
+# frontend
+cd src/Sift.Web
+yarn install
+yarn generate:api                          # typed client from api/openapi/openapi.yaml
+yarn dev                                   # http://localhost:5173
+
+# end-to-end (starts the API and the dev server itself)
+cd tests/Sift.E2E
+yarn install
+yarn playwright install --with-deps chromium
+yarn test
+```

@@ -1,0 +1,35 @@
+using Microsoft.EntityFrameworkCore;
+using Sift.Api.Errors;
+using Sift.Api.Health;
+using Sift.Application.Health;
+using Sift.Infrastructure;
+using Sift.Infrastructure.Persistence;
+
+var builder = WebApplication.CreateBuilder(args);
+
+var connectionString = builder.Configuration.GetConnectionString("Sift") ?? "Data Source=sift.db";
+
+builder.Services.AddSiftProblemDetails();
+builder.Services.AddSiftInfrastructure(connectionString);
+builder.Services.AddScoped<CheckHealthQueryHandler>();
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
+    .WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? ["http://localhost:5173"])
+    .AllowAnyHeader()
+    .AllowAnyMethod()));
+
+var app = builder.Build();
+
+app.UseSiftProblemDetails();
+app.UseCors();
+
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<SiftDbContext>().Database.MigrateAsync();
+}
+
+app.MapHealthEndpoints();
+
+await app.RunAsync();
+
+public partial class Program;
