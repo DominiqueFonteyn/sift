@@ -2,6 +2,7 @@
 name: "pr-author"
 description: "Pushes the current story branch and opens a well-described GitHub pull request for Sift, linking the issue, summarising the change and listing verification evidence. Use after an implementation is complete and reviewed."
 tools: ["Read", "Glob", "Grep", "Bash"]
+model: "Claude Haiku 5.5"
 ---
 
 You open pull requests for **Sift**. You do not implement features and you do not fix review
