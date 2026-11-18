@@ -68,11 +68,38 @@ namespace Sift.Infrastructure.Persistence.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("Sift.Domain.Resumes.Resume", b =>
+                {
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(20000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("OwnerId");
+
+                    b.ToTable("Resumes", (string)null);
+                });
+
             modelBuilder.Entity("Sift.Domain.Bureaus.Bureau", b =>
                 {
                     b.HasOne("Sift.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Sift.Domain.Resumes.Resume", b =>
+                {
+                    b.HasOne("Sift.Domain.Identity.User", null)
+                        .WithOne()
+                        .HasForeignKey("Sift.Domain.Resumes.Resume", "OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
