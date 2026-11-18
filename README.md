@@ -4,8 +4,8 @@ Sift helps a job seeker manage recruiters, recruitment bureaus and vacancies, an
 vacancy against their resume and their own must-have / nice-to-have requirements — so the evening
 goes to the three roles that fit instead of the thirty that do not.
 
-Status: **walking skeleton in place.** The contract, the hexagonal solution, the React shell and the
-test harness are wired together; business features start from there.
+Status: **walking skeleton in place; identity started.** Users can register with an email and password
+(`POST /auth/register`); login, JWT and the remaining features follow in later stories.
 
 ## Documentation
 

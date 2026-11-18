@@ -1,4 +1,5 @@
 import { useHealth } from './health/useHealth';
+import { RegisterForm } from './identity/RegisterForm';
 
 export function App() {
   const health = useHealth();
@@ -23,6 +24,7 @@ export function App() {
           </p>
         )}
       </section>
+      <RegisterForm />
     </main>
   );
 }

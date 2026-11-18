@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Sift.Api.Errors;
 using Sift.Api.Health;
+using Sift.Api.Identity;
 using Sift.Application.Health;
+using Sift.Application.Identity;
 using Sift.Infrastructure;
 using Sift.Infrastructure.Persistence;
 
@@ -12,6 +14,7 @@ var connectionString = builder.Configuration.GetConnectionString("Sift") ?? "Dat
 builder.Services.AddSiftProblemDetails();
 builder.Services.AddSiftInfrastructure(connectionString);
 builder.Services.AddScoped<CheckHealthQueryHandler>();
+builder.Services.AddScoped<RegisterUserHandler>();
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
     .WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? ["http://localhost:5173"])
     .AllowAnyHeader()
@@ -29,6 +32,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHealthEndpoints();
+app.MapIdentityEndpoints();
 
 await app.RunAsync();
 
