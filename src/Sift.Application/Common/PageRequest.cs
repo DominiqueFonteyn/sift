@@ -20,7 +20,8 @@ public sealed record PageRequest
 
     public int PageSize { get; }
 
-    public int Offset => (Page - 1) * PageSize;
+    // long because a page near int.MaxValue times the page size overflows int, and SQLite treats a negative offset as 0.
+    public long Offset => (long)(Page - 1) * PageSize;
 
     // Takes the raw query values so a non-numeric value gets the same validation problem as an out-of-range one.
     public static bool TryCreate(

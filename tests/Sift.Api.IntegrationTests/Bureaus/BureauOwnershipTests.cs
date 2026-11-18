@@ -96,6 +96,21 @@ public sealed class BureauOwnershipTests(SiftApiFactory factory) : IClassFixture
     }
 
     [Theory]
+    [InlineData("21474838")]
+    [InlineData("2147483647")]
+    public async Task A_very_large_page_is_empty_rather_than_wrapping_to_the_first_page(string page)
+    {
+        using var client = await AuthenticatedClient.CreateSignedInAsync(factory);
+        await CreateAsync(client, "only");
+
+        var result = await client.GetFromJsonAsync<JsonElement>($"/bureaus?page={page}&pageSize=100");
+
+        Assert.Empty(Names(result));
+        Assert.Equal(1, result.GetProperty("total").GetInt32());
+        Assert.Equal(int.Parse(page), result.GetProperty("page").GetInt32());
+    }
+
+    [Theory]
     [InlineData("page=0", "page")]
     [InlineData("page=abc", "page")]
     [InlineData("pageSize=0", "pageSize")]

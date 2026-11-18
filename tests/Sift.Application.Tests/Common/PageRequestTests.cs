@@ -9,7 +9,9 @@ public sealed class PageRequestTests
     [InlineData("1", "1", 1, 1, 0)]
     [InlineData("3", "20", 3, 20, 40)]
     [InlineData("2", "100", 2, 100, 100)]
-    public void Accepts_valid_values_and_applies_defaults(string? page, string? pageSize, int expectedPage, int expectedPageSize, int expectedOffset)
+    [InlineData("21474838", "100", 21474838, 100, 2147483700)]
+    [InlineData("2147483647", "100", 2147483647, 100, 214748364600)]
+    public void Accepts_valid_values_and_applies_defaults(string? page, string? pageSize, int expectedPage, int expectedPageSize, long expectedOffset)
     {
         var valid = PageRequest.TryCreate(page, pageSize, out var request, out var errors);
 
