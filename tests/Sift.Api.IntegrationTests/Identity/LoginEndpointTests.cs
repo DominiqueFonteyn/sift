@@ -165,6 +165,24 @@ public sealed class LoginEndpointTests(SiftApiFactory factory) : IClassFixture<S
         Assert.Equal(HttpStatusCode.OK, health.StatusCode);
     }
 
+    [Fact]
+    public async Task Only_health_register_and_login_are_anonymous_and_everything_else_is_protected()
+    {
+        using var client = factory.CreateClient();
+
+        var health = await client.GetAsync("/health");
+        var register = await client.PostAsJsonAsync("/auth/register", new { email = UniqueEmail(), password = Password });
+        var login = await LoginAsync(client, UniqueEmail(), Password);
+        var me = await client.GetAsync("/auth/me");
+        var unknown = await client.GetAsync("/does-not-exist");
+
+        Assert.Equal(HttpStatusCode.OK, health.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, register.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, me.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, unknown.StatusCode);
+    }
+
     private static JwtOptions TestOptions() => new() { SigningKey = SiftApiFactory.TestSigningKey };
 
     private static string UniqueEmail() => $"user-{Guid.NewGuid():N}@example.com";

@@ -14,7 +14,8 @@ public static class HealthEndpoints
                 return Results.Ok(new HealthResponse(Describe(report.Status)));
             })
             .WithName("Health_check")
-            .WithTags("Health");
+            .WithTags("Health")
+            .AllowAnonymous();
 
         return endpoints;
     }

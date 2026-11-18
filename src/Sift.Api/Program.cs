@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Sift.Api.Errors;
 using Sift.Api.Health;
@@ -24,7 +25,9 @@ builder.Services
         options.MapInboundClaims = false;
         options.TokenValidationParameters = JwtValidation.CreateParameters(jwtOptions);
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options => options.FallbackPolicy = new AuthorizationPolicyBuilder()
+    .RequireAuthenticatedUser()
+    .Build());
 builder.Services.AddScoped<CheckHealthQueryHandler>();
 builder.Services.AddScoped<RegisterUserHandler>();
 builder.Services.AddScoped<LoginUserHandler>();
