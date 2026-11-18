@@ -54,17 +54,18 @@ On REQUEST CHANGES, run `/implement issue=12` again with the findings, then `/re
 
 ### Running the whole loop
 
-`/ship` orchestrates every stage above in one prompt, delegating each to its agent and enforcing the
-gates. It runs in the main session (not as a custom agent) because it has to hand work to the other
-agents.
+`/ship-requirement` and `/ship-issue` orchestrate every stage above in one prompt, delegating each to
+its agent and enforcing the gates. They run in the main session (not as a custom agent) because they
+have to hand work to the other agents. They are two commands because Junie only runs a command when
+every `$argument` in its template is supplied, so one command cannot take either argument.
 
-| Command                     | Runs                                                               |
-| --------------------------- | ------------------------------------------------------------------ |
-| `/ship requirement=FR-2.1`  | story → story review → implement ⇄ review → PR, for each new issue |
-| `/ship issue=12`            | story review → implement ⇄ review → PR, for an existing issue      |
+| Command                                 | Runs                                                               |
+| --------------------------------------- | ------------------------------------------------------------------ |
+| `/ship-requirement requirement=FR-2.1`  | story → story review → implement ⇄ review → PR, for each new issue |
+| `/ship-issue issue=12`                  | story review → implement ⇄ review → PR, for an existing issue      |
 
-Gates: at most 2 story revision rounds and 3 implement/review rounds, then it stops and reports. It
-does not open a PR without APPROVE, and it never merges. Use the single-stage commands when you want
+Gates: at most 2 story revision rounds and 3 implement/review rounds, then they stop and report. They
+do not open a PR without APPROVE, and they never merge. Use the single-stage commands when you want
 to check each hand-off yourself.
 
 ## Conventions
