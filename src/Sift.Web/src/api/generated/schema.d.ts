@@ -55,6 +55,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bureaus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List only the signed-in user's bureaus. */
+        get: operations["Bureaus_list"];
+        put?: never;
+        /** @description Add a bureau owned by the signed-in user. */
+        post: operations["Bureaus_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bureaus/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get one of the signed-in user's bureaus. Another user's bureau returns 404, same as a missing one. */
+        get: operations["Bureaus_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -76,6 +111,26 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description A bureau owned by the signed-in user. */
+        Bureau: {
+            /**
+             * Format: uuid
+             * @description Identifier of the bureau.
+             */
+            id: string;
+            /** @description Name of the bureau. */
+            name: string;
+            /**
+             * Format: date-time
+             * @description When the bureau was created, in UTC.
+             */
+            createdAt: string;
+        };
+        /** @description The details needed to add a bureau. The owner is always the signed-in user; any owner supplied is ignored. */
+        CreateBureauRequest: {
+            /** @description Name of the bureau. */
+            name: string;
+        };
         /** @description The account of the signed-in user. */
         CurrentUser: {
             /**
@@ -289,6 +344,117 @@ export interface operations {
             };
             /** @description An account already exists for the given email address. */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Bureaus_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bureau"][];
+                };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Bureaus_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBureauRequest"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded and a new resource has been created as a result. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bureau"];
+                };
+            };
+            /** @description The request was rejected because one or more fields are invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationProblemDetails"];
+                };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Bureaus_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bureau"];
+                };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The resource does not exist or is not owned by the signed-in user. The two cases are indistinguishable. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
