@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Register a new account. Does not require authentication. */
+        post: operations["Identity_register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -51,6 +68,54 @@ export interface components {
             /** @description A URI reference that identifies the specific occurrence of the problem. */
             instance?: string;
         };
+        /** @description The details needed to create an account. */
+        RegisterRequest: {
+            /**
+             * Format: email
+             * @description Email address used to identify the account. Unique across all accounts.
+             */
+            email: string;
+            /**
+             * Format: password
+             * @description Plain-text password, only ever sent over the wire and never stored. At least 8 characters.
+             */
+            password: string;
+        };
+        /** @description The account that was created. Never contains the password or its hash. */
+        RegisteredUser: {
+            /**
+             * Format: uuid
+             * @description Identifier of the new account.
+             */
+            id: string;
+            /** @description Normalised email address of the account. */
+            email: string;
+            /**
+             * Format: date-time
+             * @description When the account was created, in UTC.
+             */
+            createdAt: string;
+        };
+        /** @description Problem details for a rejected request, listing the offending fields. */
+        ValidationProblemDetails: {
+            /** @description A URI reference that identifies the problem type. */
+            type?: string;
+            /** @description A short, human-readable summary of the problem type. */
+            title?: string;
+            /**
+             * Format: int32
+             * @description The HTTP status code generated for this occurrence of the problem.
+             */
+            status?: number;
+            /** @description A human-readable explanation specific to this occurrence of the problem. */
+            detail?: string;
+            /** @description A URI reference that identifies the specific occurrence of the problem. */
+            instance?: string;
+            /** @description Validation messages keyed by the request field they apply to. */
+            errors: {
+                [key: string]: string[];
+            };
+        };
     };
     responses: never;
     parameters: never;
@@ -60,6 +125,48 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    Identity_register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded and a new resource has been created as a result. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegisteredUser"];
+                };
+            };
+            /** @description The request was rejected because one or more fields are invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationProblemDetails"];
+                };
+            };
+            /** @description An account already exists for the given email address. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     Health_check: {
         parameters: {
             query?: never;

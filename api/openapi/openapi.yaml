@@ -4,7 +4,40 @@ info:
   version: 0.1.0
 tags:
   - name: Health
+  - name: Identity
 paths:
+  /auth/register:
+    post:
+      operationId: Identity_register
+      description: Register a new account. Does not require authentication.
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisteredUser'
+        '400':
+          description: The request was rejected because one or more fields are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '409':
+          description: An account already exists for the given email address.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Identity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
   /health:
     get:
       operationId: Health_check
@@ -62,3 +95,70 @@ components:
           type: string
           description: A URI reference that identifies the specific occurrence of the problem.
       description: RFC 7807 problem details. Every error response uses this shape.
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          minLength: 3
+          maxLength: 254
+          format: email
+          description: Email address used to identify the account. Unique across all accounts.
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          format: password
+          description: Plain-text password, only ever sent over the wire and never stored. At least 8 characters.
+      description: The details needed to create an account.
+    RegisteredUser:
+      type: object
+      required:
+        - id
+        - email
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifier of the new account.
+        email:
+          type: string
+          description: Normalised email address of the account.
+        createdAt:
+          type: string
+          format: date-time
+          description: When the account was created, in UTC.
+      description: The account that was created. Never contains the password or its hash.
+    ValidationProblemDetails:
+      type: object
+      required:
+        - errors
+      properties:
+        type:
+          type: string
+          description: A URI reference that identifies the problem type.
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type.
+        status:
+          type: integer
+          format: int32
+          description: The HTTP status code generated for this occurrence of the problem.
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+        instance:
+          type: string
+          description: A URI reference that identifies the specific occurrence of the problem.
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: Validation messages keyed by the request field they apply to.
+      description: Problem details for a rejected request, listing the offending fields.
