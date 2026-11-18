@@ -31,12 +31,14 @@ public sealed class ResumeEndpointTests(SiftApiFactory fixture) : IClassFixture<
         Assert.Equal(updatedAt, body.GetProperty("updatedAt").GetDateTimeOffset());
     }
 
-    private static async Task AssertProblemAsync(HttpResponseMessage response, HttpStatusCode status)
+    private static async Task<JsonElement> AssertProblemAsync(HttpResponseMessage response, HttpStatusCode status)
     {
         Assert.Equal(status, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal((int)status, body.GetProperty("status").GetInt32());
+
+        return body;
     }
 
     [Fact]
@@ -110,7 +112,8 @@ public sealed class ResumeEndpointTests(SiftApiFactory fixture) : IClassFixture<
 
         var response = await SaveAsync(client, blank);
 
-        await AssertProblemAsync(response, HttpStatusCode.BadRequest);
+        var body = await AssertProblemAsync(response, HttpStatusCode.BadRequest);
+        Assert.Contains("empty", body.GetProperty("detail").GetString());
         await AssertResumeAsync(client, "keep me", T1);
     }
 
@@ -134,9 +137,8 @@ public sealed class ResumeEndpointTests(SiftApiFactory fixture) : IClassFixture<
 
         var response = await SaveAsync(client, new string('a', 20_001));
 
-        await AssertProblemAsync(response, HttpStatusCode.BadRequest);
-        var body = await response.Content.ReadAsStringAsync();
-        Assert.Contains("20,000", body);
+        var body = await AssertProblemAsync(response, HttpStatusCode.BadRequest);
+        Assert.Contains("20,000", body.GetProperty("detail").GetString());
         await AssertResumeAsync(client, "keep me", T1);
     }
 

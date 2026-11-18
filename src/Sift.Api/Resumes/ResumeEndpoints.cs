@@ -45,7 +45,7 @@ public static class ResumeEndpoints
                 return result switch
                 {
                     SaveMyResumeResult.Saved saved => Results.Ok(new ResumeResponse(saved.Resume.Text, saved.Resume.UpdatedAt)),
-                    SaveMyResumeResult.Invalid invalid => ProblemResults.Validation(invalid.Errors),
+                    SaveMyResumeResult.Invalid invalid => ProblemResults.Validation(invalid.Errors, detail: invalid.Errors.Values.First()[0]),
                     _ => throw new InvalidOperationException($"Unhandled result {result.GetType().Name}.")
                 };
             })

@@ -2,9 +2,10 @@ namespace Sift.Api.Errors;
 
 public static class ProblemResults
 {
-    public static IResult Validation(IReadOnlyDictionary<string, string[]> errors) =>
+    public static IResult Validation(IReadOnlyDictionary<string, string[]> errors, string? detail = null) =>
         Results.ValidationProblem(
             errors.ToDictionary(pair => pair.Key, pair => pair.Value),
+            detail: detail,
             title: "One or more validation errors occurred.",
             statusCode: StatusCodes.Status400BadRequest);
 
