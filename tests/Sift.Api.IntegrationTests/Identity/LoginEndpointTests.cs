@@ -152,33 +152,23 @@ public sealed class LoginEndpointTests(SiftApiFactory factory) : IClassFixture<S
     }
 
     [Fact]
-    public async Task Register_and_login_stay_reachable_without_a_token()
-    {
-        using var client = factory.CreateClient();
-
-        var login = await LoginAsync(client, UniqueEmail(), Password);
-        var register = await client.PostAsJsonAsync("/auth/register", new { email = UniqueEmail(), password = Password });
-
-        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
-        Assert.Equal(HttpStatusCode.Created, register.StatusCode);
-        var health = await client.GetAsync("/health");
-        Assert.Equal(HttpStatusCode.OK, health.StatusCode);
-    }
-
-    [Fact]
     public async Task Only_health_register_and_login_are_anonymous_and_everything_else_is_protected()
     {
         using var client = factory.CreateClient();
+        var email = UniqueEmail();
 
+        // A 401 from login could also come from the fallback policy, so prove anonymity with a 200:
+        // register then log in, both with no Authorization header.
         var health = await client.GetAsync("/health");
-        var register = await client.PostAsJsonAsync("/auth/register", new { email = UniqueEmail(), password = Password });
-        var login = await LoginAsync(client, UniqueEmail(), Password);
+        var register = await client.PostAsJsonAsync("/auth/register", new { email, password = Password });
+        var login = await LoginAsync(client, email, Password);
         var me = await client.GetAsync("/auth/me");
+        // Unknown routes answer 401, not 404, without a token: intended under the fallback policy.
         var unknown = await client.GetAsync("/does-not-exist");
 
         Assert.Equal(HttpStatusCode.OK, health.StatusCode);
         Assert.Equal(HttpStatusCode.Created, register.StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, me.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, unknown.StatusCode);
     }

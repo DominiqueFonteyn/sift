@@ -27,6 +27,8 @@ Everything that does not serve that sentence is deferred.
 3. **SQLite.** Single file, zero infra. EF Core for writes and Dapper for reads from day one so the hexagonal boundaries are exercised; the provider swap to Postgres/SQL Server stays a config change.
 4. **One resume per user.** Removes "default resume" selection from every screen and API.
 5. **Token in localStorage.** The web app keeps the JWT in `localStorage` (simple, survives reloads). Acceptable for the MVP; revisit with refresh tokens and safer storage post-MVP.
+   - **Risk accepted:** any XSS can read the token from `localStorage` and use it until it expires.
+   - **What limits it:** a 1h token lifetime, zero clock skew (a token dies exactly at expiry) and no refresh token, so a stolen token cannot be renewed.
 6. **Hexagonal from the first commit.** Even thin slices go domain → port → adapter, because retrofitting the architecture later is what actually costs time.
 
 ## Walking skeleton (definition of "MVP done")
