@@ -44,6 +44,22 @@ test('a registered user can log in and then log out', async ({ page, request }) 
   await expect(page.getByRole('region', { name: 'Login' })).toBeVisible();
 });
 
+test('a session that expires while the app is open returns to the login screen', async ({ page, request }) => {
+  const email = uniqueEmail();
+  await registerViaApi(request, email);
+  await page.clock.install();
+  await page.goto('/');
+
+  await submitLogin(page, email, password);
+  await expect(page.getByTestId('signed-in')).toContainText(email);
+
+  await page.clock.fastForward('01:05:00');
+
+  await expect(page.getByRole('region', { name: 'Login' })).toBeVisible();
+  await expect(page.getByTestId('session-expired')).toBeVisible();
+  await expect(page.getByTestId('signed-in')).toHaveCount(0);
+});
+
 test('a wrong password and an unknown email show the same message', async ({ page, request }) => {
   const email = uniqueEmail();
   await registerViaApi(request, email);

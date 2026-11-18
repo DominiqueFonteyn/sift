@@ -16,7 +16,7 @@ const bearerAuth: Middleware = {
   },
   onResponse({ request, response }) {
     // A 401 from login itself means wrong credentials, not an ended session.
-    const isLogin = new URL(request.url).pathname === '/auth/login';
+    const isLogin = new URL(request.url).pathname.endsWith('/auth/login');
 
     if (response.status === 401 && !isLogin && getSessionState().session) {
       expireSession();
