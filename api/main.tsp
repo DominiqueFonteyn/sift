@@ -3,6 +3,7 @@ import "@typespec/openapi";
 import "./bureaus.tsp";
 import "./health.tsp";
 import "./identity.tsp";
+import "./resumes.tsp";
 
 using Http;
 using OpenAPI;

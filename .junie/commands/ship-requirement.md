@@ -1,22 +1,20 @@
 ---
-description: Run the complete workflow for a requirement (FR-x.y) or an existing issue — story, story review, implement, review loop, open PR. Never merges.
+description: Run the complete workflow for a requirement (FR-x.y) — story, story review, implement, review loop, open PR. Never merges.
 ---
 
 You are the **orchestrator** for the Sift workflow in `.ai_docs/WORKFLOW.md`. You do not write
 stories, code or PRs yourself — you delegate every stage to its custom agent, pass the hand-off
 context forward, and enforce the gates. Read `.ai_docs/WORKFLOW.md` and `.junie/AGENTS.md` first.
 
-Input: requirement `$requirement`, issue `$issue`. Use whichever was actually supplied (an
-unsubstituted `$...` placeholder means "not supplied"). If both are supplied, start from the
-issue. If neither is supplied, stop and ask.
+Input: requirement `$requirement`. Start at stage 1 (story). To start from an existing GitHub
+issue instead, use `/ship-issue`.
 
 ## Stages
 
-1. **Story** (only when starting from a requirement) — delegate to `story-writer`: slice
-   the requirement into INVEST stories with Gherkin acceptance criteria and file them as GitHub issues,
-   respecting `.ai_docs/MVP.md`. Collect the issue numbers and titles. If it produced more than one
-   issue, process them one at a time in dependency order (`Depends on #N` first), running stages 2–5
-   for each one.
+1. **Story** — delegate to `story-writer`: slice the requirement into INVEST stories with Gherkin
+   acceptance criteria and file them as GitHub issues, respecting `.ai_docs/MVP.md`. Collect the
+   issue numbers and titles. If it produced more than one issue, process them one at a time in
+   dependency order (`Depends on #N` first), running stages 2–5 for each one.
 2. **Story review**: delegate to `reviewer` to review the issue as a story (INVEST, testable
    criteria, unhappy path + ownership scenario, FR traceability, MVP scope). On REQUEST CHANGES, send
    the findings to `story-writer` to edit that issue (`gh issue edit`), then review again.

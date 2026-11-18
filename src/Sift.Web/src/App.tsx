@@ -3,6 +3,7 @@ import { LoginForm } from './identity/LoginForm';
 import { RegisterForm } from './identity/RegisterForm';
 import { SignedIn } from './identity/SignedIn';
 import { useSession } from './identity/useSession';
+import { ResumeEditor } from './resume/ResumeEditor';
 
 export function App() {
   const health = useHealth();
@@ -29,7 +30,10 @@ export function App() {
         )}
       </section>
       {session ? (
-        <SignedIn />
+        <>
+          <SignedIn />
+          <ResumeEditor />
+        </>
       ) : (
         <>
           <LoginForm sessionExpired={expired} />

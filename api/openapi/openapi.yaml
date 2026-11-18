@@ -6,6 +6,7 @@ tags:
   - name: Bureaus
   - name: Health
   - name: Identity
+  - name: Resumes
 paths:
   /auth/login:
     post:
@@ -221,6 +222,63 @@ paths:
         - Health
       security:
         - {}
+  /resume:
+    get:
+      operationId: Resumes_getMyResume
+      description: Get the signed-in user's resume. Returns 404 when the user has not saved one yet.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resume'
+        '401':
+          description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: The signed-in user has no resume yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Resumes
+    put:
+      operationId: Resumes_saveMyResume
+      description: Create or replace the signed-in user's resume. Blank or oversized text is rejected with 400 and leaves any previous resume unchanged.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resume'
+        '400':
+          description: The request was rejected because one or more fields are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '401':
+          description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Resumes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveResumeRequest'
 security:
   - BearerAuth: []
 components:
@@ -409,6 +467,32 @@ components:
           format: date-time
           description: When the account was created, in UTC.
       description: The account that was created. Never contains the password or its hash.
+    Resume:
+      type: object
+      required:
+        - text
+        - updatedAt
+      properties:
+        text:
+          type: string
+          description: Plain-text resume, exactly as saved.
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the resume was last saved, in UTC, taken from the application clock.
+      description: The signed-in user's resume.
+    SaveResumeRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 20000
+          pattern: \S
+          description: Plain-text resume. Must contain at least one non-whitespace character; blank or whitespace-only text is rejected with 400. At most 20,000 characters, counted as sent in UTF-16 code units (JavaScript string length), with no trimming before counting.
+      description: The resume text to save. The signed-in user's single resume is created or replaced.
     ValidationProblemDetails:
       type: object
       required:

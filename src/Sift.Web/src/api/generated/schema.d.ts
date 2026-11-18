@@ -107,6 +107,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get the signed-in user's resume. Returns 404 when the user has not saved one yet. */
+        get: operations["Resumes_getMyResume"];
+        /** @description Create or replace the signed-in user's resume. Blank or oversized text is rejected with 400 and leaves any previous resume unchanged. */
+        put: operations["Resumes_saveMyResume"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -239,6 +257,21 @@ export interface components {
              * @description When the account was created, in UTC.
              */
             createdAt: string;
+        };
+        /** @description The signed-in user's resume. */
+        Resume: {
+            /** @description Plain-text resume, exactly as saved. */
+            text: string;
+            /**
+             * Format: date-time
+             * @description When the resume was last saved, in UTC, taken from the application clock.
+             */
+            updatedAt: string;
+        };
+        /** @description The resume text to save. The signed-in user's single resume is created or replaced. */
+        SaveResumeRequest: {
+            /** @description Plain-text resume. Must contain at least one non-whitespace character; blank or whitespace-only text is rejected with 400. At most 20,000 characters, counted as sent in UTF-16 code units (JavaScript string length), with no trimming before counting. */
+            text: string;
         };
         /** @description Problem details for a rejected request, listing the offending fields. */
         ValidationProblemDetails: {
@@ -518,6 +551,86 @@ export interface operations {
             };
             /** @description An unexpected error response. */
             default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Resumes_getMyResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Resume"];
+                };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The signed-in user has no resume yet. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Resumes_saveMyResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveResumeRequest"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Resume"];
+                };
+            };
+            /** @description The request was rejected because one or more fields are invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationProblemDetails"];
+                };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
