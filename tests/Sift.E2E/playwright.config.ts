@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { defineConfig, devices } from '@playwright/test';
 
 const apiUrl = 'http://localhost:5100';
@@ -20,7 +21,8 @@ export default defineConfig({
       url: `${apiUrl}/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,
-      env: { ASPNETCORE_ENVIRONMENT: 'Development' },
+      // A throwaway key per run keeps signing material out of the repo.
+      env: { ASPNETCORE_ENVIRONMENT: 'Development', Jwt__SigningKey: randomBytes(32).toString('hex') },
     },
     {
       command: 'yarn --cwd ../../src/Sift.Web dev',

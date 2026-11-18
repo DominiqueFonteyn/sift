@@ -1,8 +1,12 @@
 import { useHealth } from './health/useHealth';
+import { LoginForm } from './identity/LoginForm';
 import { RegisterForm } from './identity/RegisterForm';
+import { SignedIn } from './identity/SignedIn';
+import { useSession } from './identity/useSession';
 
 export function App() {
   const health = useHealth();
+  const { session, expired } = useSession();
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 p-8 text-slate-900">
@@ -24,7 +28,14 @@ export function App() {
           </p>
         )}
       </section>
-      <RegisterForm />
+      {session ? (
+        <SignedIn />
+      ) : (
+        <>
+          <LoginForm sessionExpired={expired} />
+          <RegisterForm />
+        </>
+      )}
     </main>
   );
 }

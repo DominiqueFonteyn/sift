@@ -4,8 +4,9 @@ Sift helps a job seeker manage recruiters, recruitment bureaus and vacancies, an
 vacancy against their resume and their own must-have / nice-to-have requirements — so the evening
 goes to the three roles that fit instead of the thirty that do not.
 
-Status: **walking skeleton in place; identity started.** Users can register with an email and password
-(`POST /auth/register`); login, JWT and the remaining features follow in later stories.
+Status: **walking skeleton in place; identity in progress.** Users can register with an email and
+password (`POST /auth/register`), log in to receive a JWT (`POST /auth/login`) and log out in the UI;
+the remaining features follow in later stories.
 
 ## Documentation
 
@@ -33,7 +34,8 @@ corepack enable
 yarn install
 yarn tsp compile api
 
-# backend
+# backend; the API refuses to start without a JWT signing key (32+ characters), kept out of the repo
+dotnet user-secrets set "Jwt:SigningKey" "$(openssl rand -hex 32)" --project src/Sift.Api
 dotnet build
 dotnet test
 dotnet run --project src/Sift.Api          # http://localhost:5100/health
