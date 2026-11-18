@@ -62,7 +62,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description List only the signed-in user's bureaus. */
+        /** @description List only the signed-in user's bureaus, one page at a time. An out-of-range page or page size is rejected with 400. */
         get: operations["Bureaus_list"];
         put?: never;
         /** @description Add a bureau owned by the signed-in user. */
@@ -126,9 +126,29 @@ export interface components {
              */
             createdAt: string;
         };
+        /** @description One page of the signed-in user's bureaus, oldest first. */
+        BureauPage: {
+            /** @description The bureaus on this page. */
+            items: components["schemas"]["Bureau"][];
+            /**
+             * Format: int32
+             * @description Total number of the signed-in user's bureaus across all pages.
+             */
+            total: number;
+            /**
+             * Format: int32
+             * @description The 1-based page that was returned.
+             */
+            page: number;
+            /**
+             * Format: int32
+             * @description The maximum number of items per page that was applied.
+             */
+            pageSize: number;
+        };
         /** @description The details needed to add a bureau. The owner is always the signed-in user; any owner supplied is ignored. */
         CreateBureauRequest: {
-            /** @description Name of the bureau. */
+            /** @description Name of the bureau. Must contain at least one non-whitespace character; a name made only of whitespace is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. */
             name: string;
         };
         /** @description The account of the signed-in user. */
@@ -355,7 +375,12 @@ export interface operations {
     };
     Bureaus_list: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 1-based page number. Defaults to 1. */
+                page?: number;
+                /** @description Number of items per page, between 1 and 100. Defaults to 20. */
+                pageSize?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -368,7 +393,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Bureau"][];
+                    "application/json": components["schemas"]["BureauPage"];
+                };
+            };
+            /** @description The request was rejected because one or more fields are invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationProblemDetails"];
                 };
             };
             /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
