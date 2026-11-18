@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Sift.Api.Bureaus;
 using Sift.Api.Errors;
 using Sift.Api.Health;
 using Sift.Api.Identity;
+using Sift.Application.Bureaus;
 using Sift.Application.Health;
 using Sift.Application.Identity;
 using Sift.Infrastructure;
@@ -31,6 +33,7 @@ builder.Services.AddAuthorization(options => options.FallbackPolicy = new Author
 builder.Services.AddScoped<CheckHealthQueryHandler>();
 builder.Services.AddScoped<RegisterUserHandler>();
 builder.Services.AddScoped<LoginUserHandler>();
+builder.Services.AddScoped<CreateBureauHandler>();
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
     .WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? ["http://localhost:5173"])
     .AllowAnyHeader()
@@ -51,6 +54,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapHealthEndpoints();
 app.MapIdentityEndpoints();
+app.MapBureauEndpoints();
 
 await app.RunAsync();
 

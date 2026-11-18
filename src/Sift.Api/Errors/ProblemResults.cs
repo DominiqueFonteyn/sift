@@ -14,6 +14,12 @@ public static class ProblemResults
             title: "Authentication failed.",
             detail: detail);
 
+    // One fixed body so a foreign resource looks exactly like a missing one.
+    public static IResult NotFound() =>
+        Results.Problem(
+            statusCode: StatusCodes.Status404NotFound,
+            title: "The resource was not found.");
+
     public static IResult Conflict(string detail) =>
         Results.Problem(
             statusCode: StatusCodes.Status409Conflict,
