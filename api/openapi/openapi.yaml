@@ -18,12 +18,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
-        '400':
-          description: The request was rejected because one or more fields are invalid.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationProblemDetails'
         '401':
           description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
           content:
@@ -157,12 +151,10 @@ components:
       properties:
         email:
           type: string
-          minLength: 1
           maxLength: 254
           description: Email address of the account.
         password:
           type: string
-          minLength: 1
           maxLength: 128
           format: password
           description: Plain-text password of the account.

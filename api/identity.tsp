@@ -58,12 +58,10 @@ model ConflictProblem {
 @doc("The credentials of an existing account.")
 model LoginRequest {
   @doc("Email address of the account.")
-  @minLength(1)
   @maxLength(254)
   email: string;
 
   @doc("Plain-text password of the account.")
-  @minLength(1)
   @maxLength(128)
   @secret
   password: string;
@@ -110,7 +108,7 @@ interface Identity {
   @route("/login")
   @post
   @useAuth(NoAuth)
-  login(@body request: LoginRequest): LoginResponse | BadRequestProblem | UnauthorizedProblem;
+  login(@body request: LoginRequest): LoginResponse | UnauthorizedProblem;
 
   @doc("Register a new account. Does not require authentication.")
   @route("/register")

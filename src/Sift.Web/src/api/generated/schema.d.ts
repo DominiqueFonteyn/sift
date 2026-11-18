@@ -216,15 +216,6 @@ export interface operations {
                     "application/json": components["schemas"]["LoginResponse"];
                 };
             };
-            /** @description The request was rejected because one or more fields are invalid. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ValidationProblemDetails"];
-                };
-            };
             /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
             401: {
                 headers: {
