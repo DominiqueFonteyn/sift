@@ -33,7 +33,7 @@ public sealed class Bureau
     {
         error = string.IsNullOrWhiteSpace(name)
             ? "A bureau needs a name."
-            : name.Trim().Length > NameMaxLength
+            : name.Length > NameMaxLength
                 ? $"A bureau name can be at most {NameMaxLength} characters."
                 : null;
 

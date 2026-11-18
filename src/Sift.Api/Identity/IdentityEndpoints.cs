@@ -53,7 +53,7 @@ public static class IdentityEndpoints
                 ICurrentUserQuery query,
                 CancellationToken cancellationToken) =>
             {
-                if (!Guid.TryParse(principal.FindFirstValue("sub"), out var userId))
+                if (!principal.TryGetUserId(out var userId))
                 {
                     return ProblemResults.Unauthorized("The access token is invalid.");
                 }

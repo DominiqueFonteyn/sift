@@ -23,12 +23,25 @@ public sealed class BureauTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Rejects_a_blank_name(string? name) =>
-        Assert.False(Bureau.TryValidateName(name, out var error) || error is null);
+    public void Rejects_a_blank_name(string? name)
+    {
+        var valid = Bureau.TryValidateName(name, out var error);
 
-    [Fact]
-    public void Rejects_a_name_that_is_too_long() =>
-        Assert.False(Bureau.TryValidateName(new string('a', Bureau.NameMaxLength + 1), out _));
+        Assert.False(valid);
+        Assert.Equal("A bureau needs a name.", error);
+    }
+
+    [Theory]
+    [InlineData(Bureau.NameMaxLength, 0, true)]
+    [InlineData(Bureau.NameMaxLength + 1, 0, false)]
+    // The contract limits the raw string, so surrounding whitespace counts too.
+    [InlineData(Bureau.NameMaxLength - 5, 10, false)]
+    public void Limits_the_name_length_as_the_contract_does(int letters, int padding, bool expected)
+    {
+        var name = new string(' ', padding / 2) + new string('a', letters) + new string(' ', padding - padding / 2);
+
+        Assert.Equal(expected, Bureau.TryValidateName(name, out _));
+    }
 
     [Fact]
     public void Requires_an_owner() =>

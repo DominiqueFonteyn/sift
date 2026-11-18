@@ -51,8 +51,9 @@ public static class BureauEndpoints
             })
             .WithName("Bureaus_list");
 
-        group.MapGet("/{id:guid}", async (
-                Guid id,
+        // No route constraint: a malformed id must get the same problem body as a missing or foreign one.
+        group.MapGet("/{id}", async (
+                string id,
                 ClaimsPrincipal principal,
                 IBureauQueries queries,
                 CancellationToken cancellationToken) =>
@@ -62,7 +63,12 @@ public static class BureauEndpoints
                     return ProblemResults.Unauthorized("The access token is invalid.");
                 }
 
-                var bureau = await queries.GetAsync(userId, id, cancellationToken);
+                if (!Guid.TryParse(id, out var bureauId))
+                {
+                    return ProblemResults.NotFound();
+                }
+
+                var bureau = await queries.GetAsync(userId, bureauId, cancellationToken);
 
                 return bureau is null
                     ? ProblemResults.NotFound()

@@ -42,6 +42,19 @@ public sealed class BureauOwnershipTests(SiftApiFactory factory) : IClassFixture
     }
 
     [Fact]
+    public async Task A_malformed_id_is_indistinguishable_from_a_missing_one()
+    {
+        using var client = await AuthenticatedClient.CreateSignedInAsync(factory);
+
+        var malformed = await client.GetAsync("/bureaus/not-a-guid");
+        var missing = await client.GetAsync($"/bureaus/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, malformed.StatusCode);
+        Assert.Equal("application/problem+json", malformed.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(await Normalised(missing), await Normalised(malformed));
+    }
+
+    [Fact]
     public async Task Listing_returns_only_the_callers_bureaus()
     {
         using var userA = await AuthenticatedClient.CreateSignedInAsync(factory);
