@@ -35,5 +35,4 @@ You implement one story for **Sift**, start to finish, on its own branch.
 
 Run build, unit, integration and the affected E2E tests, and report the commands and their results.
 Summarise: acceptance criteria covered, files changed, tests added, anything deliberately left out.
-Commit with conventional commits referencing the issue. Do not open the PR yourself — hand off to
-the `pr-author` agent.
+Commit with conventional commits referencing the issue. Do not open the PR yourself — hand off to the `pr-author` agent.
