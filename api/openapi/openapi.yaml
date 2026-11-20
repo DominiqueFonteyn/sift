@@ -6,6 +6,7 @@ tags:
   - name: Bureaus
   - name: Health
   - name: Identity
+  - name: Recruiters
   - name: Requirements
   - name: Resumes
   - name: Vacancies
@@ -224,6 +225,84 @@ paths:
         - Health
       security:
         - {}
+  /recruiters:
+    post:
+      operationId: Recruiters_create
+      description: Add a recruiter owned by the signed-in user.
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recruiter'
+        '400':
+          description: The request was rejected because one or more fields are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '401':
+          description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Recruiters
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecruiterRequest'
+    get:
+      operationId: Recruiters_list
+      description: List only the signed-in user's recruiters, one page at a time. An out-of-range page or page size is rejected with 400.
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: 1-based page number. Defaults to 1.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            default: 1
+          explode: false
+        - name: pageSize
+          in: query
+          required: false
+          description: Number of items per page, between 1 and 100. Defaults to 20.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecruiterPage'
+        '400':
+          description: The request was rejected because one or more fields are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '401':
+          description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Recruiters
   /requirements:
     post:
       operationId: Requirements_create
@@ -503,6 +582,33 @@ paths:
                 $ref: '#/components/schemas/ProblemDetails'
       tags:
         - Vacancies
+    delete:
+      operationId: Vacancies_delete
+      description: Permanently delete one of the signed-in user's vacancies. A malformed id, an unknown id, an already-deleted vacancy and another user's vacancy all return the same 404 and nothing is changed.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        '401':
+          description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: The resource does not exist or is not owned by the signed-in user. The two cases are indistinguishable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Vacancies
 security:
   - BearerAuth: []
 components:
@@ -568,6 +674,30 @@ components:
           pattern: \S
           description: Name of the bureau. Must contain at least one non-whitespace character; a name made only of whitespace is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored.
       description: The details needed to add a bureau. The owner is always the signed-in user; any owner supplied is ignored.
+    CreateRecruiterRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          pattern: \S
+          description: Name of the recruiter. Must contain at least one non-whitespace character; a name made only of whitespace is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored.
+        email:
+          type: string
+          maxLength: 254
+          description: Email address. Optional; when given it must be a well-formed email address of at most 254 characters. An empty or whitespace-only value is treated as not given.
+        phone:
+          type: string
+          maxLength: 50
+          description: Phone number as free text; the format is not checked. Optional; at most 50 characters, counted as sent. An empty or whitespace-only value is treated as not given.
+        linkedInUrl:
+          type: string
+          maxLength: 2048
+          description: LinkedIn profile URL. Optional; when given it must be an absolute http or https URL of at most 2048 characters. An empty or whitespace-only value is treated as not given.
+      description: The details needed to add a recruiter. The owner is always the signed-in user; any owner supplied is ignored.
     CreateRequirementRequest:
       type: object
       required:
@@ -701,6 +831,64 @@ components:
           type: string
           description: A URI reference that identifies the specific occurrence of the problem.
       description: RFC 7807 problem details. Every error response uses this shape.
+    Recruiter:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifier of the recruiter.
+        name:
+          type: string
+          description: Name of the recruiter.
+        email:
+          type: string
+          description: Email address, when one was given.
+        phone:
+          type: string
+          description: Phone number, when one was given.
+        linkedInUrl:
+          type: string
+          description: LinkedIn profile URL, when one was given.
+        createdAt:
+          type: string
+          format: date-time
+          description: When the recruiter was created, in UTC.
+      description: A recruiter owned by the signed-in user.
+    RecruiterPage:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recruiter'
+          description: The recruiters on this page.
+        total:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Total number of the signed-in user's recruiters across all pages.
+        page:
+          type: integer
+          format: int32
+          minimum: 1
+          description: The 1-based page that was returned.
+        pageSize:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+          description: The maximum number of items per page that was applied.
+      description: One page of the signed-in user's recruiters, oldest first.
     RegisterRequest:
       type: object
       required:

@@ -107,6 +107,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/recruiters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List only the signed-in user's recruiters, one page at a time. An out-of-range page or page size is rejected with 400. */
+        get: operations["Recruiters_list"];
+        put?: never;
+        /** @description Add a recruiter owned by the signed-in user. */
+        post: operations["Recruiters_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/requirements": {
         parameters: {
             query?: never;
@@ -189,7 +207,8 @@ export interface paths {
         get: operations["Vacancies_get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** @description Permanently delete one of the signed-in user's vacancies. A malformed id, an unknown id, an already-deleted vacancy and another user's vacancy all return the same 404 and nothing is changed. */
+        delete: operations["Vacancies_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -238,6 +257,17 @@ export interface components {
         CreateBureauRequest: {
             /** @description Name of the bureau. Must contain at least one non-whitespace character; a name made only of whitespace is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. */
             name: string;
+        };
+        /** @description The details needed to add a recruiter. The owner is always the signed-in user; any owner supplied is ignored. */
+        CreateRecruiterRequest: {
+            /** @description Name of the recruiter. Must contain at least one non-whitespace character; a name made only of whitespace is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. */
+            name: string;
+            /** @description Email address. Optional; when given it must be a well-formed email address of at most 254 characters. An empty or whitespace-only value is treated as not given. */
+            email?: string;
+            /** @description Phone number as free text; the format is not checked. Optional; at most 50 characters, counted as sent. An empty or whitespace-only value is treated as not given. */
+            phone?: string;
+            /** @description LinkedIn profile URL. Optional; when given it must be an absolute http or https URL of at most 2048 characters. An empty or whitespace-only value is treated as not given. */
+            linkedInUrl?: string;
         };
         /** @description The details needed to add a job requirement. The owner is always the signed-in user; any owner supplied is ignored. */
         CreateRequirementRequest: {
@@ -320,6 +350,47 @@ export interface components {
             detail?: string;
             /** @description A URI reference that identifies the specific occurrence of the problem. */
             instance?: string;
+        };
+        /** @description A recruiter owned by the signed-in user. */
+        Recruiter: {
+            /**
+             * Format: uuid
+             * @description Identifier of the recruiter.
+             */
+            id: string;
+            /** @description Name of the recruiter. */
+            name: string;
+            /** @description Email address, when one was given. */
+            email?: string;
+            /** @description Phone number, when one was given. */
+            phone?: string;
+            /** @description LinkedIn profile URL, when one was given. */
+            linkedInUrl?: string;
+            /**
+             * Format: date-time
+             * @description When the recruiter was created, in UTC.
+             */
+            createdAt: string;
+        };
+        /** @description One page of the signed-in user's recruiters, oldest first. */
+        RecruiterPage: {
+            /** @description The recruiters on this page. */
+            items: components["schemas"]["Recruiter"][];
+            /**
+             * Format: int32
+             * @description Total number of the signed-in user's recruiters across all pages.
+             */
+            total: number;
+            /**
+             * Format: int32
+             * @description The 1-based page that was returned.
+             */
+            page: number;
+            /**
+             * Format: int32
+             * @description The maximum number of items per page that was applied.
+             */
+            pageSize: number;
         };
         /** @description The details needed to create an account. */
         RegisterRequest: {
@@ -805,6 +876,91 @@ export interface operations {
             };
         };
     };
+    Recruiters_list: {
+        parameters: {
+            query?: {
+                /** @description 1-based page number. Defaults to 1. */
+                page?: number;
+                /** @description Number of items per page, between 1 and 100. Defaults to 20. */
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecruiterPage"];
+                };
+            };
+            /** @description The request was rejected because one or more fields are invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationProblemDetails"];
+                };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Recruiters_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRecruiterRequest"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded and a new resource has been created as a result. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recruiter"];
+                };
+            };
+            /** @description The request was rejected because one or more fields are invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationProblemDetails"];
+                };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     Requirements_list: {
         parameters: {
             query?: {
@@ -1121,6 +1277,44 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["VacancyDetail"];
                 };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The resource does not exist or is not owned by the signed-in user. The two cases are indistinguishable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Vacancies_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description There is no content to send for this request, but the headers may be useful. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
             401: {
