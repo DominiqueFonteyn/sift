@@ -101,6 +101,34 @@ public static class VacancyEndpoints
             })
             .WithName("Vacancies_get");
 
+        // No route constraint, for the same reason as get.
+        group.MapDelete("/{id}", async (
+                string id,
+                ClaimsPrincipal principal,
+                DeleteVacancyHandler handler,
+                CancellationToken cancellationToken) =>
+            {
+                if (!principal.TryGetUserId(out var userId))
+                {
+                    return ProblemResults.InvalidToken();
+                }
+
+                if (!Guid.TryParse(id, out var vacancyId))
+                {
+                    return ProblemResults.NotFound();
+                }
+
+                var result = await handler.HandleAsync(new DeleteVacancyCommand(userId, vacancyId), cancellationToken);
+
+                return result switch
+                {
+                    DeleteVacancyResult.Deleted => Results.NoContent(),
+                    DeleteVacancyResult.NotFound => ProblemResults.NotFound(),
+                    _ => throw new InvalidOperationException($"Unhandled result {result.GetType().Name}.")
+                };
+            })
+            .WithName("Vacancies_delete");
+
         return endpoints;
     }
 

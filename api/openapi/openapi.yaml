@@ -503,6 +503,33 @@ paths:
                 $ref: '#/components/schemas/ProblemDetails'
       tags:
         - Vacancies
+    delete:
+      operationId: Vacancies_delete
+      description: Permanently delete one of the signed-in user's vacancies. A malformed id, an unknown id, an already-deleted vacancy and another user's vacancy all return the same 404 and nothing is changed.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        '401':
+          description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: The resource does not exist or is not owned by the signed-in user. The two cases are indistinguishable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Vacancies
 security:
   - BearerAuth: []
 components:

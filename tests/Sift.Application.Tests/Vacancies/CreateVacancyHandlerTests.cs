@@ -61,6 +61,9 @@ public sealed class CreateVacancyHandlerTests
             Added.Add(vacancy);
             return Task.CompletedTask;
         }
+
+        public Task<bool> RemoveAsync(Guid ownerId, Guid vacancyId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class FixedClock : IClock
