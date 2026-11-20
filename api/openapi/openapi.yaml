@@ -471,6 +471,38 @@ paths:
                 $ref: '#/components/schemas/ProblemDetails'
       tags:
         - Vacancies
+  /vacancies/{id}:
+    get:
+      operationId: Vacancies_get
+      description: Get one of the signed-in user's vacancies in full. A malformed id, an unknown id and another user's vacancy all return the same 404.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vacancy'
+        '401':
+          description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: The resource does not exist or is not owned by the signed-in user. The two cases are indistinguishable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Vacancies
 security:
   - BearerAuth: []
 components:
