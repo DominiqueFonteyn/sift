@@ -7,6 +7,8 @@ export function ResumeEditor() {
 
   return (
     <section
+      id="resume"
+      tabIndex={-1}
       aria-label="Resume"
       className="w-full max-w-2xl rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm"
     >

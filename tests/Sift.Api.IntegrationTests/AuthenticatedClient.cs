@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Sift.Api.IntegrationTests;
 
@@ -8,7 +9,7 @@ public static class AuthenticatedClient
 {
     private const string Password = "correct horse battery";
 
-    public static async Task<HttpClient> CreateSignedInAsync(SiftApiFactory factory)
+    public static async Task<HttpClient> CreateSignedInAsync(WebApplicationFactory<Program> factory)
     {
         var client = factory.CreateClient();
         var email = $"user-{Guid.NewGuid():N}@example.com";

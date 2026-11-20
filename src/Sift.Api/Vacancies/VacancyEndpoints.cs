@@ -2,7 +2,10 @@ using System.Security.Claims;
 using Sift.Api.Errors;
 using Sift.Api.Identity;
 using Sift.Application.Common;
+using Sift.Application.Matching;
 using Sift.Application.Vacancies;
+using Sift.Domain.Matching;
+using Sift.Domain.Requirements;
 
 namespace Sift.Api.Vacancies;
 
@@ -74,7 +77,7 @@ public static class VacancyEndpoints
         group.MapGet("/{id}", async (
                 string id,
                 ClaimsPrincipal principal,
-                IVacancyQueries queries,
+                OpenVacancyHandler handler,
                 CancellationToken cancellationToken) =>
             {
                 if (!principal.TryGetUserId(out var userId))
@@ -87,14 +90,42 @@ public static class VacancyEndpoints
                     return ProblemResults.NotFound();
                 }
 
-                var vacancy = await queries.GetAsync(userId, vacancyId, cancellationToken);
+                var result = await handler.HandleAsync(new OpenVacancyQuery(userId, vacancyId), cancellationToken);
 
-                return vacancy is null
-                    ? ProblemResults.NotFound()
-                    : Results.Ok(new VacancyResponse(vacancy.Id, vacancy.Title, vacancy.Company, vacancy.RawText, vacancy.CreatedAt));
+                return result switch
+                {
+                    OpenVacancyResult.Opened opened => Results.Ok(ToResponse(opened)),
+                    OpenVacancyResult.NotFound => ProblemResults.NotFound(),
+                    _ => throw new InvalidOperationException($"Unhandled result {result.GetType().Name}.")
+                };
             })
             .WithName("Vacancies_get");
 
         return endpoints;
     }
+
+    private static VacancyDetailResponse ToResponse(OpenVacancyResult.Opened opened) => new(
+        opened.Vacancy.Id,
+        opened.Vacancy.Title,
+        opened.Vacancy.Company,
+        opened.Vacancy.RawText,
+        opened.Vacancy.CreatedAt,
+        opened.Match switch
+        {
+            VacancyMatchOutcome.Scored scored => new VacancyMatchResponse(
+                scored.Result.Score,
+                scored.Result.Verdicts
+                    .Select(verdict => new RequirementVerdictResponse(
+                        verdict.Term,
+                        RequirementKinds.ToName(verdict.Kind),
+                        verdict.Verdict == Verdict.Met ? "met" : "not met",
+                        verdict.Explanation))
+                    .ToList(),
+                []),
+            VacancyMatchOutcome.NothingToScore nothing => new VacancyMatchResponse(
+                null,
+                [],
+                nothing.Missing.Select(input => input == MatchInput.Resume ? "resume" : "requirements").ToList()),
+            _ => throw new InvalidOperationException($"Unhandled outcome {opened.Match.GetType().Name}.")
+        });
 }

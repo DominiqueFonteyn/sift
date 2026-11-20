@@ -34,6 +34,8 @@ export function RequirementsEditor() {
 
   return (
     <section
+      id="requirements"
+      tabIndex={-1}
       aria-label="Requirements"
       className="w-full max-w-2xl rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm"
     >

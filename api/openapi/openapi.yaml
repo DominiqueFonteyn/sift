@@ -474,7 +474,7 @@ paths:
   /vacancies/{id}:
     get:
       operationId: Vacancies_get
-      description: Get one of the signed-in user's vacancies in full. A malformed id, an unknown id and another user's vacancy all return the same 404.
+      description: Get one of the signed-in user's vacancies in full, scored against the user's own resume and requirements. The score is worked out on every request and never stored. A malformed id, an unknown id and another user's vacancy all return the same 404 and nothing is scored.
       parameters:
         - name: id
           in: path
@@ -488,7 +488,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Vacancy'
+                $ref: '#/components/schemas/VacancyDetail'
         '401':
           description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
           content:
@@ -675,6 +675,12 @@ components:
           format: date-time
           description: When the token expires, in UTC.
       description: A signed-in session. Send the token as a bearer token on protected requests.
+    MatchInput:
+      type: string
+      enum:
+        - resume
+        - requirements
+      description: An input the signed-in user must provide before a vacancy can be scored.
     ProblemDetails:
       type: object
       properties:
@@ -792,6 +798,27 @@ components:
           maximum: 100
           description: The maximum number of items per page that was applied.
       description: One page of the signed-in user's requirements, oldest first.
+    RequirementVerdict:
+      type: object
+      required:
+        - requirement
+        - kind
+        - verdict
+        - explanation
+      properties:
+        requirement:
+          type: string
+          description: The requirement term.
+        kind:
+          $ref: '#/components/schemas/RequirementKind'
+          description: Whether the requirement is a must-have or a nice-to-have.
+        verdict:
+          $ref: '#/components/schemas/VerdictOutcome'
+          description: Whether the term was found in the vacancy text.
+        explanation:
+          type: string
+          description: Names the requirement term and says whether it was found in the vacancy text.
+      description: The verdict for one of the signed-in user's requirements.
     Resume:
       type: object
       required:
@@ -845,6 +872,37 @@ components:
           format: date-time
           description: When the vacancy was created, in UTC, taken from the application clock.
       description: A vacancy owned by the signed-in user.
+    VacancyDetail:
+      type: object
+      required:
+        - id
+        - title
+        - company
+        - rawText
+        - createdAt
+        - match
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifier of the vacancy.
+        title:
+          type: string
+          description: Job title, trimmed.
+        company:
+          type: string
+          description: Hiring company, trimmed.
+        rawText:
+          type: string
+          description: The vacancy text, exactly as pasted.
+        createdAt:
+          type: string
+          format: date-time
+          description: When the vacancy was created, in UTC, taken from the application clock.
+        match:
+          $ref: '#/components/schemas/VacancyMatch'
+          description: How the vacancy scores against the signed-in user's resume and requirements.
+      description: A vacancy owned by the signed-in user, together with how it scores.
     VacancyListItem:
       type: object
       required:
@@ -868,6 +926,32 @@ components:
           format: date-time
           description: When the vacancy was created, in UTC.
       description: A vacancy as shown in the list; the raw text is not included.
+    VacancyMatch:
+      type: object
+      required:
+        - score
+        - verdicts
+        - missingInputs
+      properties:
+        score:
+          anyOf:
+            - type: integer
+              format: int32
+            - type: 'null'
+          minimum: 0
+          maximum: 100
+          description: Overall score, an integer from 0 to 100. A vacancy meeting every must-have scores at least 50; one with an unmet must-have scores at most 49. Null when an input is missing.
+        verdicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequirementVerdict'
+          description: One verdict per requirement, unmet must-haves first. Empty when an input is missing.
+        missingInputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchInput'
+          description: The inputs the user still has to provide, resume first. Empty when the vacancy was scored.
+      description: How a vacancy scores against the signed-in user's resume and requirements. It is worked out each time the vacancy is opened and is never stored. Without a resume or without requirements there is no score and no verdicts, and the missing inputs are listed instead.
     VacancyPage:
       type: object
       required:
@@ -927,6 +1011,12 @@ components:
               type: string
           description: Validation messages keyed by the request field they apply to.
       description: Problem details for a rejected request, listing the offending fields.
+    VerdictOutcome:
+      type: string
+      enum:
+        - met
+        - not met
+      description: Whether one requirement was found in the vacancy text.
   securitySchemes:
     BearerAuth:
       type: http

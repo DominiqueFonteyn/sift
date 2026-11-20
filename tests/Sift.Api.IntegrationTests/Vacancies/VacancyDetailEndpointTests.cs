@@ -32,7 +32,7 @@ public sealed class VacancyDetailEndpointTests(SiftApiFactory factory) : IClassF
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(["company", "createdAt", "id", "rawText", "title"], body.EnumerateObject().Select(p => p.Name).Order().ToArray());
+        Assert.Equal(["company", "createdAt", "id", "match", "rawText", "title"], body.EnumerateObject().Select(p => p.Name).Order().ToArray());
         Assert.Equal(id, body.GetProperty("id").GetGuid());
         Assert.Equal("Backend Engineer", body.GetProperty("title").GetString());
         Assert.Equal("Acme", body.GetProperty("company").GetString());

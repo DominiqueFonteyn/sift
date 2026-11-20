@@ -11,11 +11,13 @@ using Sift.Api.Vacancies;
 using Sift.Application.Bureaus;
 using Sift.Application.Health;
 using Sift.Application.Identity;
+using Sift.Application.Matching;
 using Sift.Application.Requirements;
 using Sift.Application.Resumes;
 using Sift.Application.Vacancies;
 using Sift.Infrastructure;
 using Sift.Infrastructure.Identity;
+using Sift.Infrastructure.Matching;
 using Sift.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +46,8 @@ builder.Services.AddScoped<CreateRequirementHandler>();
 builder.Services.AddScoped<DeleteRequirementHandler>();
 builder.Services.AddScoped<SaveMyResumeHandler>();
 builder.Services.AddScoped<CreateVacancyHandler>();
+builder.Services.AddScoped<OpenVacancyHandler>();
+builder.Services.AddSingleton<IMatchEngine, RuleBasedMatchEngine>();
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
     .WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? ["http://localhost:5173"])
     .AllowAnyHeader()

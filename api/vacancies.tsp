@@ -44,6 +44,75 @@ model Vacancy {
   createdAt: utcDateTime;
 }
 
+@doc("An input the signed-in user must provide before a vacancy can be scored.")
+enum MatchInput {
+  @doc("The user has not saved a resume.")
+  Resume: "resume",
+
+  @doc("The user has no requirements.")
+  Requirements: "requirements",
+}
+
+@doc("Whether one requirement was found in the vacancy text.")
+enum VerdictOutcome {
+  @doc("The requirement term appears in the vacancy text.")
+  Met: "met",
+
+  @doc("The requirement term does not appear in the vacancy text.")
+  NotMet: "not met",
+}
+
+@doc("The verdict for one of the signed-in user's requirements.")
+model RequirementVerdict {
+  @doc("The requirement term.")
+  requirement: string;
+
+  @doc("Whether the requirement is a must-have or a nice-to-have.")
+  kind: RequirementKind;
+
+  @doc("Whether the term was found in the vacancy text.")
+  verdict: VerdictOutcome;
+
+  @doc("Names the requirement term and says whether it was found in the vacancy text.")
+  explanation: string;
+}
+
+@doc("How a vacancy scores against the signed-in user's resume and requirements. It is worked out each time the vacancy is opened and is never stored. Without a resume or without requirements there is no score and no verdicts, and the missing inputs are listed instead.")
+model VacancyMatch {
+  @doc("Overall score, an integer from 0 to 100. A vacancy meeting every must-have scores at least 50; one with an unmet must-have scores at most 49. Null when an input is missing.")
+  @minValue(0)
+  @maxValue(100)
+  score: int32 | null;
+
+  @doc("One verdict per requirement, unmet must-haves first. Empty when an input is missing.")
+  verdicts: RequirementVerdict[];
+
+  @doc("The inputs the user still has to provide, resume first. Empty when the vacancy was scored.")
+  missingInputs: MatchInput[];
+}
+
+@doc("A vacancy owned by the signed-in user, together with how it scores.")
+model VacancyDetail {
+  @doc("Identifier of the vacancy.")
+  @format("uuid")
+  id: string;
+
+  @doc("Job title, trimmed.")
+  title: string;
+
+  @doc("Hiring company, trimmed.")
+  company: string;
+
+  @doc("The vacancy text, exactly as pasted.")
+  rawText: string;
+
+  @doc("When the vacancy was created, in UTC, taken from the application clock.")
+  createdAt: utcDateTime;
+
+  @doc("How the vacancy scores against the signed-in user's resume and requirements.")
+  match: VacancyMatch;
+}
+
 @doc("A vacancy as shown in the list; the raw text is not included.")
 model VacancyListItem {
   @doc("Identifier of the vacancy.")
@@ -104,8 +173,8 @@ interface Vacancies {
     pageSize?: int32 = 20,
   ): VacancyPage | BadRequestProblem | UnauthorizedProblem;
 
-  @doc("Get one of the signed-in user's vacancies in full. A malformed id, an unknown id and another user's vacancy all return the same 404.")
+  @doc("Get one of the signed-in user's vacancies in full, scored against the user's own resume and requirements. The score is worked out on every request and never stored. A malformed id, an unknown id and another user's vacancy all return the same 404 and nothing is scored.")
   @route("/{id}")
   @get
-  get(@path @format("uuid") id: string): Vacancy | UnauthorizedProblem | NotFoundProblem;
+  get(@path @format("uuid") id: string): VacancyDetail | UnauthorizedProblem | NotFoundProblem;
 }
