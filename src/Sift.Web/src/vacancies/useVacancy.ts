@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
 import type { components } from '../api/generated/schema';
 
-export type Vacancy = components['schemas']['Vacancy'];
+export type VacancyDetail = components['schemas']['VacancyDetail'];
 
 export type VacancyState =
   | { kind: 'loading' }
-  | { kind: 'loaded'; vacancy: Vacancy }
+  | { kind: 'loaded'; vacancy: VacancyDetail }
   | { kind: 'not-found' }
   | { kind: 'failed'; detail: string };
 

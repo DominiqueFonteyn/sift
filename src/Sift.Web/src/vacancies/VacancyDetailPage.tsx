@@ -1,4 +1,5 @@
 import { formatVacancyDate } from './formatVacancyDate';
+import { MatchPanel } from './MatchPanel';
 import { useVacancy } from './useVacancy';
 
 type VacancyDetailPageProps = {
@@ -33,8 +34,8 @@ export function VacancyDetailPage({ id, onBack }: VacancyDetailPageProps) {
           We could not find that vacancy.
         </p>
       )}
+      {state.kind === 'loaded' && <MatchPanel match={state.vacancy.match} />}
       {state.kind === 'loaded' && (
-        // A future score panel (#8) can sit beside or below this article.
         <article className="rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
           <h2 data-testid="vacancy-detail-title" className="text-lg font-semibold">
             {state.vacancy.title}
