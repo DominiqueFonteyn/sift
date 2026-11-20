@@ -25,6 +25,18 @@ async function logIn(page: Page, email: string): Promise<void> {
   await expect(page.getByTestId('signed-in')).toContainText(email);
 }
 
+async function createVacancyViaApi(request: APIRequestContext, email: string, title: string): Promise<void> {
+  const login = await request.post(`${apiUrl}/auth/login`, { data: { email, password } });
+  expect(login.ok()).toBe(true);
+  const { accessToken } = (await login.json()) as { accessToken: string };
+
+  const response = await request.post(`${apiUrl}/vacancies`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    data: { title, company: 'Acme', rawText: 'Private text' },
+  });
+  expect(response.status()).toBe(201);
+}
+
 function list(page: Page) {
   return page.getByRole('region', { name: 'Vacancies' });
 }
@@ -81,6 +93,19 @@ test('an empty title shows an inline error next to the title and saves nothing',
 
   await form(page).getByRole('button', { name: 'Cancel' }).click();
   await expect(list(page).getByTestId('vacancies-empty')).toBeVisible();
+});
+
+test("another user's vacancy is not shown in my list", async ({ page, request }) => {
+  const owner = uniqueEmail();
+  const other = uniqueEmail();
+  await registerViaApi(request, owner);
+  await registerViaApi(request, other);
+  await createVacancyViaApi(request, owner, "A's secret role");
+
+  await logIn(page, other);
+
+  await expect(list(page).getByTestId('vacancies-empty')).toBeVisible();
+  await expect(page.getByText("A's secret role")).toHaveCount(0);
 });
 
 test('a new user sees an empty state that links to pasting a vacancy', async ({ page, request }) => {

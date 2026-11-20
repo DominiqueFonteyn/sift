@@ -6,7 +6,6 @@ public sealed class VacancyTests
 {
     private static readonly DateTimeOffset Now = new(2026, 1, 2, 3, 4, 5, TimeSpan.FromHours(2));
 
-
     public static TheoryData<string, string?, bool> FieldRules()
     {
         var data = new TheoryData<string, string?, bool>();

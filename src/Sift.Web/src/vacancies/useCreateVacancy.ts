@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { apiClient } from '../api/client';
-import { validateVacancy, type VacancyDraft, type VacancyField, type VacancyFieldErrors } from './vacancyRules';
+import { validateVacancy, type CreateVacancyRequest, type VacancyField, type VacancyFieldErrors } from './vacancyRules';
 
 export type CreateOutcome = { ok: true } | { ok: false; fieldErrors: VacancyFieldErrors; message: string | null };
 
@@ -21,7 +21,7 @@ function serverFieldErrors(error: unknown): VacancyFieldErrors {
 }
 
 export function useCreateVacancy() {
-  return useCallback(async (draft: VacancyDraft): Promise<CreateOutcome> => {
+  return useCallback(async (draft: CreateVacancyRequest): Promise<CreateOutcome> => {
     const invalid = validateVacancy(draft);
     if (Object.keys(invalid).length > 0) {
       return { ok: false, fieldErrors: invalid, message: null };
