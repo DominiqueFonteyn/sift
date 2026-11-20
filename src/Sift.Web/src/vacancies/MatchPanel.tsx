@@ -1,28 +1,9 @@
-import type { MouseEvent } from 'react';
 import type { components } from '../api/generated/schema';
+import { MissingInputLinks, missingInputs } from './MissingInputs';
 
 type VacancyMatch = components['schemas']['VacancyMatch'];
-type MatchInput = components['schemas']['MatchInput'];
 
 const passThreshold = 50;
-
-const missingInputs: Record<MatchInput, { label: string; target: string; linkText: string }> = {
-  resume: { label: 'resume', target: 'resume', linkText: 'my resume' },
-  requirements: { label: 'requirements', target: 'requirements', linkText: 'my requirements' },
-};
-
-// The resume and requirements editors sit on the same page, so the links scroll to them
-// instead of changing the route, which would leave the vacancy.
-function goTo(target: string) {
-  return (event: MouseEvent<HTMLAnchorElement>) => {
-    const section = document.getElementById(target);
-    if (section) {
-      event.preventDefault();
-      section.scrollIntoView({ block: 'start' });
-      section.focus({ preventScroll: true });
-    }
-  };
-}
 
 type MatchPanelProps = {
   match: VacancyMatch;
@@ -39,20 +20,7 @@ export function MatchPanel({ match }: MatchPanelProps) {
         <p className="font-medium">
           This vacancy cannot be scored yet. Missing: {match.missingInputs.map((input) => missingInputs[input].label).join(', ')}.
         </p>
-        <ul className="mt-2 flex flex-col gap-1">
-          {match.missingInputs.map((input) => (
-            <li key={input}>
-              <a
-                href={`#${missingInputs[input].target}`}
-                data-testid={`match-missing-${input}`}
-                onClick={goTo(missingInputs[input].target)}
-                className="font-medium underline"
-              >
-                Add {missingInputs[input].linkText}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <MissingInputLinks inputs={match.missingInputs} testIdPrefix="match-missing" />
       </section>
     );
   }
