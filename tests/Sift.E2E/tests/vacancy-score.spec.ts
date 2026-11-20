@@ -1,51 +1,64 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import type { components } from '../../../src/Sift.Web/src/api/generated/schema';
+
+type Schemas = components['schemas'];
+type RequirementKind = Schemas['RequirementKind'];
+type MatchInput = Schemas['MatchInput'];
+type CreateRequirementRequest = Schemas['CreateRequirementRequest'];
+type CreateVacancyRequest = Schemas['CreateVacancyRequest'];
+type SaveResumeRequest = Schemas['SaveResumeRequest'];
+type RegisterRequest = Schemas['RegisterRequest'];
 
 const apiUrl = 'http://localhost:5100';
 const password = 'correct horse battery';
-
-type Kind = 'must-have' | 'nice-to-have';
 
 function uniqueEmail(): string {
   return `e2e-score-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}@example.com`;
 }
 
-async function signUp(request: APIRequestContext, email: string): Promise<{ Authorization: string }> {
-  const register = await request.post(`${apiUrl}/auth/register`, { data: { email, password } });
+type AuthHeaders = { Authorization: string };
+
+async function signUp(request: APIRequestContext, email: string): Promise<AuthHeaders> {
+  const credentials: RegisterRequest = { email, password };
+  const register = await request.post(`${apiUrl}/auth/register`, { data: credentials });
   expect(register.status()).toBe(201);
-  const login = await request.post(`${apiUrl}/auth/login`, { data: { email, password } });
+  const login = await request.post(`${apiUrl}/auth/login`, { data: credentials });
   expect(login.ok()).toBe(true);
-  const { accessToken } = (await login.json()) as { accessToken: string };
+  const { accessToken } = (await login.json()) as Schemas['LoginResponse'];
 
   return { Authorization: `Bearer ${accessToken}` };
 }
 
-async function saveResume(request: APIRequestContext, headers: { Authorization: string }): Promise<void> {
-  const response = await request.put(`${apiUrl}/resume`, { headers, data: { text: 'Ten years of backend work.' } });
+async function saveResume(request: APIRequestContext, headers: AuthHeaders): Promise<void> {
+  const body: SaveResumeRequest = { text: 'Ten years of backend work.' };
+  const response = await request.put(`${apiUrl}/resume`, { headers, data: body });
   expect(response.ok()).toBe(true);
 }
 
 async function addRequirement(
   request: APIRequestContext,
-  headers: { Authorization: string },
+  headers: AuthHeaders,
   text: string,
-  kind: Kind,
+  kind: RequirementKind,
 ): Promise<string> {
-  const response = await request.post(`${apiUrl}/requirements`, { headers, data: { text, kind } });
+  const body: CreateRequirementRequest = { text, kind };
+  const response = await request.post(`${apiUrl}/requirements`, { headers, data: body });
   expect(response.status()).toBe(201);
 
-  return ((await response.json()) as { id: string }).id;
+  return ((await response.json()) as Schemas['Requirement']).id;
 }
 
 async function createVacancy(
   request: APIRequestContext,
-  headers: { Authorization: string },
+  headers: AuthHeaders,
   title: string,
   rawText: string,
 ): Promise<string> {
-  const response = await request.post(`${apiUrl}/vacancies`, { headers, data: { title, company: 'Acme', rawText } });
+  const body: CreateVacancyRequest = { title, company: 'Acme', rawText };
+  const response = await request.post(`${apiUrl}/vacancies`, { headers, data: body });
   expect(response.status()).toBe(201);
 
-  return ((await response.json()) as { id: string }).id;
+  return ((await response.json()) as Schemas['Vacancy']).id;
 }
 
 async function logInAndOpen(page: Page, email: string, title: string): Promise<void> {
@@ -126,44 +139,94 @@ test('meeting every must-have scores at least 50', async ({ page, request }) => 
   expect(Number(await page.getByTestId('vacancy-score').innerText())).toBeGreaterThanOrEqual(50);
 });
 
-test('without a resume or requirements no score is shown and each missing input is a link', async ({
-  page,
-  request,
-}) => {
-  const email = uniqueEmail();
-  const headers = await signUp(request, email);
-  await createVacancy(request, headers, 'Unscored Engineer', 'We need C#');
+const editorRegions: Record<MatchInput, string> = { resume: 'Resume', requirements: 'Requirements' };
 
-  await logInAndOpen(page, email, 'Unscored Engineer');
+const nothingToScoreAgainst: { state: string; hasResume: boolean; hasRequirements: boolean; missing: MatchInput[] }[] = [
+  { state: 'no resume and no requirements', hasResume: false, hasRequirements: false, missing: ['resume', 'requirements'] },
+  { state: 'requirements but no resume', hasResume: false, hasRequirements: true, missing: ['resume'] },
+  { state: 'a resume but no requirements', hasResume: true, hasRequirements: false, missing: ['requirements'] },
+];
 
-  const notice = page.getByTestId('match-missing');
-  await expect(notice).toContainText('resume');
-  await expect(notice).toContainText('requirements');
-  await expect(page.getByTestId('vacancy-score')).toHaveCount(0);
-  await expect(page.getByTestId('verdict-item')).toHaveCount(0);
-  await expect(page.getByTestId('match-missing-resume')).toHaveAttribute('href', '#resume');
-  await expect(page.getByTestId('match-missing-requirements')).toHaveAttribute('href', '#requirements');
+for (const { state, hasResume, hasRequirements, missing } of nothingToScoreAgainst) {
+  test(`with ${state} no score or verdicts are shown, only the missing inputs are named and each link reaches its editor`, async ({
+    page,
+    request,
+  }) => {
+    const email = uniqueEmail();
+    const headers = await signUp(request, email);
+    if (hasResume) {
+      await saveResume(request, headers);
+    }
+    if (hasRequirements) {
+      await addRequirement(request, headers, 'C#', 'must-have');
+    }
+    await createVacancy(request, headers, 'Unscored Engineer', 'We need C#');
 
-  await page.getByTestId('match-missing-resume').click();
-  await expect(page.getByRole('region', { name: 'Resume' })).toBeFocused();
-  await expect(page.getByTestId('vacancy-detail-title')).toBeVisible();
-});
+    await logInAndOpen(page, email, 'Unscored Engineer');
 
-test('only the missing input is named when the resume exists but there are no requirements', async ({
-  page,
-  request,
-}) => {
+    const notice = page.getByTestId('match-missing');
+    await expect(notice).toContainText(`Missing: ${missing.join(', ')}.`);
+    await expect(page.getByTestId('vacancy-score')).toHaveCount(0);
+    await expect(page.getByTestId('verdict-item')).toHaveCount(0);
+
+    const allInputs: MatchInput[] = ['resume', 'requirements'];
+    for (const input of allInputs.filter((candidate) => !missing.includes(candidate))) {
+      await expect(page.getByTestId(`match-missing-${input}`)).toHaveCount(0);
+    }
+    await expect(notice.getByRole('link')).toHaveCount(missing.length);
+
+    for (const input of missing) {
+      const link = page.getByTestId(`match-missing-${input}`);
+      await expect(link).toHaveAttribute('href', `#${input}`);
+
+      await link.click();
+
+      const editor = page.getByRole('region', { name: editorRegions[input] });
+      await expect(editor).toBeFocused();
+      await expect(editor).toBeInViewport();
+      await expect(page.getByTestId('vacancy-detail-title')).toBeVisible();
+    }
+  });
+}
+
+test("only my own requirements are scored, another user's requirements never appear", async ({ page, request }) => {
+  const otherHeaders = await signUp(request, uniqueEmail());
+  await saveResume(request, otherHeaders);
+  await addRequirement(request, otherHeaders, 'Kotlin', 'must-have');
+
   const email = uniqueEmail();
   const headers = await signUp(request, email);
   await saveResume(request, headers);
-  await createVacancy(request, headers, 'Half Ready Engineer', 'We need C#');
+  await addRequirement(request, headers, 'C#', 'must-have');
+  await createVacancy(request, headers, 'Shared Stack Engineer', 'We need C# and Kotlin');
 
-  await logInAndOpen(page, email, 'Half Ready Engineer');
+  await logInAndOpen(page, email, 'Shared Stack Engineer');
 
-  await expect(page.getByTestId('match-missing')).toBeVisible();
-  await expect(page.getByTestId('match-missing-requirements')).toBeVisible();
-  await expect(page.getByTestId('match-missing-resume')).toHaveCount(0);
+  const panel = page.getByRole('region', { name: 'Score' });
+  await expect(page.getByTestId('verdict-item')).toHaveCount(1);
+  await expect(verdict(page, 'C#').getByTestId('verdict-outcome')).toHaveText('met');
+  await expect(verdict(page, 'Kotlin')).toHaveCount(0);
+  await expect(page.getByTestId('verdict-explanation').filter({ hasText: 'Kotlin' })).toHaveCount(0);
+  await expect(panel).not.toContainText('Kotlin');
+  await expect(page.getByTestId('vacancy-score')).toHaveText('100');
+});
+
+test("another user's resume does not count: I see a resume notice and no score or verdicts", async ({ page, request }) => {
+  const otherHeaders = await signUp(request, uniqueEmail());
+  await saveResume(request, otherHeaders);
+
+  const email = uniqueEmail();
+  const headers = await signUp(request, email);
+  await addRequirement(request, headers, 'C#', 'must-have');
+  await createVacancy(request, headers, 'Borrowed Resume Engineer', 'We need C#');
+
+  await logInAndOpen(page, email, 'Borrowed Resume Engineer');
+
+  await expect(page.getByTestId('match-missing')).toContainText('Missing: resume.');
+  await expect(page.getByTestId('match-missing-resume')).toBeVisible();
+  await expect(page.getByTestId('match-missing-requirements')).toHaveCount(0);
   await expect(page.getByTestId('vacancy-score')).toHaveCount(0);
+  await expect(page.getByTestId('verdict-item')).toHaveCount(0);
 });
 
 test('replacing a requirement re-scores the vacancy the next time it is opened', async ({ page, request }) => {
