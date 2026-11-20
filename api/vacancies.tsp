@@ -127,9 +127,23 @@ model VacancyListItem {
 
   @doc("When the vacancy was created, in UTC.")
   createdAt: utcDateTime;
+
+  @doc("Overall score, an integer from 0 to 100, worked out against the signed-in user's current resume and requirements on every request. Null when an input is missing.")
+  @minValue(0)
+  @maxValue(100)
+  score: int32 | null;
+
+  @doc("True when at least one of the user's must-haves is not found in the vacancy text. Always false when the vacancy is not scored.")
+  failsMustHave: boolean;
+
+  @doc("The must-have terms not found in the vacancy text. Empty when none failed or the vacancy is not scored.")
+  unmetMustHaves: string[];
+
+  @doc("One verdict per requirement with its explanation, unmet must-haves first, in the same order as on the vacancy detail. Empty when the vacancy is not scored.")
+  verdicts: RequirementVerdict[];
 }
 
-@doc("One page of the signed-in user's vacancies, newest first.")
+@doc("One page of the signed-in user's vacancies. The whole list is ranked first and then paged. With a resume and at least one requirement the order is score highest first, then creation time newest first, then id ascending (lowercase canonical UUID text). When an input is missing nothing is scored and the order is creation time newest first, then id ascending.")
 model VacancyPage {
   @doc("The vacancies on this page.")
   items: VacancyListItem[];
@@ -146,6 +160,9 @@ model VacancyPage {
   @minValue(1)
   @maxValue(100)
   pageSize: int32;
+
+  @doc("The inputs the user still has to provide before vacancies can be scored, resume first. Empty when vacancies were scored.")
+  missingInputs: MatchInput[];
 }
 
 @route("/vacancies")
@@ -158,7 +175,7 @@ interface Vacancies {
     @body body: Vacancy;
   } | BadRequestProblem | UnauthorizedProblem;
 
-  @doc("List only the signed-in user's vacancies, newest first (ties broken deterministically), one page at a time. A page beyond the end returns empty items. An out-of-range page or page size is rejected with 400.")
+  @doc("List only the signed-in user's vacancies, ranked by match score against the user's current resume and requirements (highest first; ties by creation time newest first, then id ascending), one page at a time. Ranking covers all of the user's vacancies and happens before paging. Without a resume or without requirements nothing is scored and the list is newest first, ties by id ascending. A page beyond the end returns empty items with the correct total. An out-of-range page or page size is rejected with 400.")
   @get
   list(
     @doc("1-based page number. Defaults to 1.")

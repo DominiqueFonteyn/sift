@@ -427,7 +427,7 @@ paths:
               $ref: '#/components/schemas/CreateVacancyRequest'
     get:
       operationId: Vacancies_list
-      description: List only the signed-in user's vacancies, newest first (ties broken deterministically), one page at a time. A page beyond the end returns empty items. An out-of-range page or page size is rejected with 400.
+      description: List only the signed-in user's vacancies, ranked by match score against the user's current resume and requirements (highest first; ties by creation time newest first, then id ascending), one page at a time. Ranking covers all of the user's vacancies and happens before paging. Without a resume or without requirements nothing is scored and the list is newest first, ties by id ascending. A page beyond the end returns empty items with the correct total. An out-of-range page or page size is rejected with 400.
       parameters:
         - name: page
           in: query
@@ -910,6 +910,10 @@ components:
         - title
         - company
         - createdAt
+        - score
+        - failsMustHave
+        - unmetMustHaves
+        - verdicts
       properties:
         id:
           type: string
@@ -925,6 +929,27 @@ components:
           type: string
           format: date-time
           description: When the vacancy was created, in UTC.
+        score:
+          anyOf:
+            - type: integer
+              format: int32
+            - type: 'null'
+          minimum: 0
+          maximum: 100
+          description: Overall score, an integer from 0 to 100, worked out against the signed-in user's current resume and requirements on every request. Null when an input is missing.
+        failsMustHave:
+          type: boolean
+          description: True when at least one of the user's must-haves is not found in the vacancy text. Always false when the vacancy is not scored.
+        unmetMustHaves:
+          type: array
+          items:
+            type: string
+          description: The must-have terms not found in the vacancy text. Empty when none failed or the vacancy is not scored.
+        verdicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequirementVerdict'
+          description: One verdict per requirement with its explanation, unmet must-haves first, in the same order as on the vacancy detail. Empty when the vacancy is not scored.
       description: A vacancy as shown in the list; the raw text is not included.
     VacancyMatch:
       type: object
@@ -959,6 +984,7 @@ components:
         - total
         - page
         - pageSize
+        - missingInputs
       properties:
         items:
           type: array
@@ -981,7 +1007,12 @@ components:
           minimum: 1
           maximum: 100
           description: The maximum number of items per page that was applied.
-      description: One page of the signed-in user's vacancies, newest first.
+        missingInputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchInput'
+          description: The inputs the user still has to provide before vacancies can be scored, resume first. Empty when vacancies were scored.
+      description: One page of the signed-in user's vacancies. The whole list is ranked first and then paged. With a resume and at least one requirement the order is score highest first, then creation time newest first, then id ascending (lowercase canonical UUID text). When an input is missing nothing is scored and the order is creation time newest first, then id ascending.
     ValidationProblemDetails:
       type: object
       required:
