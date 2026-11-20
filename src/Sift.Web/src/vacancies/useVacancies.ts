@@ -11,15 +11,17 @@ export type VacanciesState =
   | { kind: 'loaded'; items: VacancyListItem[]; total: number }
   | { kind: 'failed'; detail: string };
 
-export function useVacancies(page: number): VacanciesState {
-  const [result, setResult] = useState<{ page: number; state: VacanciesState } | null>(null);
+// Changing reloadKey refetches the page, e.g. after a delete.
+export function useVacancies(page: number, reloadKey = 0): VacanciesState {
+  const [result, setResult] = useState<{ key: string; state: VacanciesState } | null>(null);
+  const key = `${page}:${reloadKey}`;
 
   useEffect(() => {
     let cancelled = false;
 
     function finish(state: VacanciesState) {
       if (!cancelled) {
-        setResult({ page, state });
+        setResult({ key, state });
       }
     }
 
@@ -39,7 +41,7 @@ export function useVacancies(page: number): VacanciesState {
     return () => {
       cancelled = true;
     };
-  }, [page]);
+  }, [page, key]);
 
-  return result && result.page === page ? result.state : { kind: 'loading' };
+  return result && result.key === key ? result.state : { kind: 'loading' };
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { deleteVacancy } from './deleteVacancy';
 import { formatVacancyDate } from './formatVacancyDate';
 import { useVacancies, vacanciesPageSize } from './useVacancies';
 import { vacancyHash } from './useVacancyView';
@@ -9,8 +10,25 @@ type VacancyListProps = {
 
 export function VacancyList({ onPaste }: VacancyListProps) {
   const [page, setPage] = useState(1);
-  const state = useVacancies(page);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const state = useVacancies(page, reloadKey);
   const lastPage = state.kind === 'loaded' ? Math.max(1, Math.ceil(state.total / vacanciesPageSize)) : 1;
+
+  async function confirmDelete(id: string) {
+    setDeleting(true);
+    const outcome = await deleteVacancy(id);
+    setDeleting(false);
+    setConfirmingId(null);
+    setDeleteError(outcome.ok ? null : outcome.message);
+    // Refresh even on failure: a 404 means it is already gone (e.g. deleted in another tab).
+    if (state.kind === 'loaded' && state.items.length === 1 && page > 1) {
+      setPage(page - 1);
+    }
+    setReloadKey((key) => key + 1);
+  }
 
   return (
     <section
@@ -31,6 +49,11 @@ export function VacancyList({ onPaste }: VacancyListProps) {
         </a>
       </div>
       {state.kind === 'loading' && <p data-testid="vacancies-loading">Loading your vacancies…</p>}
+      {deleteError && (
+        <p role="alert" data-testid="vacancy-delete-error" className="mt-2 text-sm text-red-600">
+          {deleteError}
+        </p>
+      )}
       {state.kind === 'failed' && (
         <p data-testid="vacancies-error" className="text-red-600">
           {state.detail}
@@ -66,9 +89,46 @@ export function VacancyList({ onPaste }: VacancyListProps) {
                     {vacancy.company}
                   </p>
                 </div>
-                <time data-testid="vacancy-created" dateTime={vacancy.createdAt} className="text-xs text-slate-500">
-                  {formatVacancyDate(vacancy.createdAt)}
-                </time>
+                <div className="flex items-center gap-3">
+                  <time data-testid="vacancy-created" dateTime={vacancy.createdAt} className="text-xs text-slate-500">
+                    {formatVacancyDate(vacancy.createdAt)}
+                  </time>
+                  {confirmingId === vacancy.id ? (
+                    <span className="flex items-center gap-2 text-xs">
+                      <span>Delete this vacancy?</span>
+                      <button
+                        type="button"
+                        disabled={deleting}
+                        onClick={() => void confirmDelete(vacancy.id)}
+                        aria-label={`Confirm delete ${vacancy.title}`}
+                        className="rounded-md bg-red-600 px-2 py-1 font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        type="button"
+                        disabled={deleting}
+                        onClick={() => setConfirmingId(null)}
+                        aria-label={`Cancel delete ${vacancy.title}`}
+                        className="rounded-md border border-slate-300 px-2 py-1 font-medium hover:bg-slate-100 disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteError(null);
+                        setConfirmingId(vacancy.id);
+                      }}
+                      aria-label={`Delete ${vacancy.title}`}
+                      className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium hover:bg-slate-100"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
