@@ -120,6 +120,42 @@ namespace Sift.Infrastructure.Persistence.Migrations
                     b.ToTable("Resumes", (string)null);
                 });
 
+            modelBuilder.Entity("Sift.Domain.Vacancies.Vacancy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RawText")
+                        .IsRequired()
+                        .HasMaxLength(20000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId", "CreatedAt");
+
+                    b.ToTable("Vacancies", (string)null);
+                });
+
             modelBuilder.Entity("Sift.Domain.Bureaus.Bureau", b =>
                 {
                     b.HasOne("Sift.Domain.Identity.User", null)
@@ -143,6 +179,15 @@ namespace Sift.Infrastructure.Persistence.Migrations
                     b.HasOne("Sift.Domain.Identity.User", null)
                         .WithOne()
                         .HasForeignKey("Sift.Domain.Resumes.Resume", "OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Sift.Domain.Vacancies.Vacancy", b =>
+                {
+                    b.HasOne("Sift.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

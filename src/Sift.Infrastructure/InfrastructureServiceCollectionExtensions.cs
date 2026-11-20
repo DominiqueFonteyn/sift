@@ -6,6 +6,7 @@ using Sift.Application.Health;
 using Sift.Application.Identity;
 using Sift.Application.Requirements;
 using Sift.Application.Resumes;
+using Sift.Application.Vacancies;
 using Sift.Infrastructure.Bureaus;
 using Sift.Infrastructure.Common;
 using Sift.Infrastructure.Health;
@@ -13,6 +14,7 @@ using Sift.Infrastructure.Identity;
 using Sift.Infrastructure.Persistence;
 using Sift.Infrastructure.Requirements;
 using Sift.Infrastructure.Resumes;
+using Sift.Infrastructure.Vacancies;
 
 namespace Sift.Infrastructure;
 
@@ -36,6 +38,8 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IRequirementQueries, DapperRequirementQueries>();
         services.AddScoped<IResumeRepository, EfResumeRepository>();
         services.AddScoped<IResumeQueries, DapperResumeQueries>();
+        services.AddScoped<IVacancyRepository, EfVacancyRepository>();
+        services.AddScoped<IVacancyQueries, DapperVacancyQueries>();
 
         return services;
     }

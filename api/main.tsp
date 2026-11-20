@@ -5,6 +5,7 @@ import "./health.tsp";
 import "./identity.tsp";
 import "./requirements.tsp";
 import "./resumes.tsp";
+import "./vacancies.tsp";
 
 using Http;
 using OpenAPI;
