@@ -47,6 +47,7 @@ builder.Services.AddScoped<DeleteRequirementHandler>();
 builder.Services.AddScoped<SaveMyResumeHandler>();
 builder.Services.AddScoped<CreateVacancyHandler>();
 builder.Services.AddScoped<OpenVacancyHandler>();
+builder.Services.AddScoped<ListVacanciesHandler>();
 builder.Services.AddSingleton<IMatchEngine, RuleBasedMatchEngine>();
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
     .WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? ["http://localhost:5173"])

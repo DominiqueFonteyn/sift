@@ -162,7 +162,7 @@ public sealed class VacancyEndpointTests(SiftApiFactory factory) : IClassFixture
         Assert.Equal(Enumerable.Range(6, 10).Reverse().Select(i => $"V{i:00}").ToArray(), Titles(page));
         foreach (var item in page.GetProperty("items").EnumerateArray())
         {
-            Assert.Equal(["company", "createdAt", "id", "title"], item.EnumerateObject().Select(p => p.Name).Order().ToArray());
+            Assert.Equal(["company", "createdAt", "failsMustHave", "id", "score", "title", "unmetMustHaves", "verdicts"], item.EnumerateObject().Select(p => p.Name).Order().ToArray());
         }
     }
 
