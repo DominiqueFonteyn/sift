@@ -68,6 +68,40 @@ namespace Sift.Infrastructure.Persistence.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("Sift.Domain.Requirements.Requirement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedText")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId", "NormalizedText")
+                        .IsUnique();
+
+                    b.ToTable("Requirements", (string)null);
+                });
+
             modelBuilder.Entity("Sift.Domain.Resumes.Resume", b =>
                 {
                     b.Property<Guid>("OwnerId")
@@ -87,6 +121,15 @@ namespace Sift.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Sift.Domain.Bureaus.Bureau", b =>
+                {
+                    b.HasOne("Sift.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Sift.Domain.Requirements.Requirement", b =>
                 {
                     b.HasOne("Sift.Domain.Identity.User", null)
                         .WithMany()
