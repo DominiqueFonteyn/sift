@@ -126,9 +126,6 @@ export function VacancyList({ onPaste }: VacancyListProps) {
                   </ul>
                 )}
                 <div className="flex items-center gap-3">
-                  <time data-testid="vacancy-created" dateTime={vacancy.createdAt} className="text-xs text-slate-500">
-                    {formatVacancyDate(vacancy.createdAt)}
-                  </time>
                   {confirmingId === vacancy.id ? (
                     <span className="flex items-center gap-2 text-xs">
                       <span>Delete this vacancy?</span>
