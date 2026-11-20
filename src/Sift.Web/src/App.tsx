@@ -3,6 +3,7 @@ import { LoginForm } from './identity/LoginForm';
 import { RegisterForm } from './identity/RegisterForm';
 import { SignedIn } from './identity/SignedIn';
 import { useSession } from './identity/useSession';
+import { RecruitersSection } from './recruiters/RecruitersSection';
 import { RequirementsEditor } from './requirements/RequirementsEditor';
 import { ResumeEditor } from './resume/ResumeEditor';
 import { NewVacancyPage } from './vacancies/NewVacancyPage';
@@ -52,6 +53,7 @@ export function App() {
         <>
           <SignedIn />
           <Vacancies />
+          <RecruitersSection />
           <ResumeEditor />
           <RequirementsEditor />
         </>
