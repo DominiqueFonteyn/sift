@@ -125,6 +125,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/vacancies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List only the signed-in user's vacancies, newest first (ties broken deterministically), one page at a time. A page beyond the end returns empty items. An out-of-range page or page size is rejected with 400. */
+        get: operations["Vacancies_list"];
+        put?: never;
+        /** @description Paste a vacancy owned by the signed-in user. Missing, blank or oversized fields are rejected with 400 problem details whose errors are keyed by field; nothing is stored. */
+        post: operations["Vacancies_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -168,6 +186,15 @@ export interface components {
         CreateBureauRequest: {
             /** @description Name of the bureau. Must contain at least one non-whitespace character; a name made only of whitespace is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. */
             name: string;
+        };
+        /** @description The vacancy to paste. The owner is always the signed-in user; any owner, id or creation time supplied is ignored. */
+        CreateVacancyRequest: {
+            /** @description Job title. Must contain at least one non-whitespace character. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. */
+            title: string;
+            /** @description Hiring company. Must contain at least one non-whitespace character. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. */
+            company: string;
+            /** @description The pasted vacancy text. Must contain at least one non-whitespace character. At most 20,000 characters, counted as sent in UTF-16 code units (JavaScript string length), with no trimming before counting; stored exactly as sent. */
+            rawText: string;
         };
         /** @description The account of the signed-in user. */
         CurrentUser: {
@@ -272,6 +299,62 @@ export interface components {
         SaveResumeRequest: {
             /** @description Plain-text resume. Must contain at least one non-whitespace character; blank or whitespace-only text is rejected with 400. At most 20,000 characters, counted as sent in UTF-16 code units (JavaScript string length), with no trimming before counting. */
             text: string;
+        };
+        /** @description A vacancy owned by the signed-in user. */
+        Vacancy: {
+            /**
+             * Format: uuid
+             * @description Identifier of the vacancy.
+             */
+            id: string;
+            /** @description Job title, trimmed. */
+            title: string;
+            /** @description Hiring company, trimmed. */
+            company: string;
+            /** @description The vacancy text, exactly as pasted. */
+            rawText: string;
+            /**
+             * Format: date-time
+             * @description When the vacancy was created, in UTC, taken from the application clock.
+             */
+            createdAt: string;
+        };
+        /** @description A vacancy as shown in the list; the raw text is not included. */
+        VacancyListItem: {
+            /**
+             * Format: uuid
+             * @description Identifier of the vacancy.
+             */
+            id: string;
+            /** @description Job title. */
+            title: string;
+            /** @description Hiring company. */
+            company: string;
+            /**
+             * Format: date-time
+             * @description When the vacancy was created, in UTC.
+             */
+            createdAt: string;
+        };
+        /** @description One page of the signed-in user's vacancies, newest first. */
+        VacancyPage: {
+            /** @description The vacancies on this page. */
+            items: components["schemas"]["VacancyListItem"][];
+            /**
+             * Format: int32
+             * @description Total number of the signed-in user's vacancies across all pages.
+             */
+            total: number;
+            /**
+             * Format: int32
+             * @description The 1-based page that was returned.
+             */
+            page: number;
+            /**
+             * Format: int32
+             * @description The maximum number of items per page that was applied.
+             */
+            pageSize: number;
         };
         /** @description Problem details for a rejected request, listing the offending fields. */
         ValidationProblemDetails: {
@@ -618,6 +701,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Resume"];
+                };
+            };
+            /** @description The request was rejected because one or more fields are invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationProblemDetails"];
+                };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Vacancies_list: {
+        parameters: {
+            query?: {
+                /** @description 1-based page number. Defaults to 1. */
+                page?: number;
+                /** @description Number of items per page, between 1 and 100. Defaults to 20. */
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VacancyPage"];
+                };
+            };
+            /** @description The request was rejected because one or more fields are invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationProblemDetails"];
+                };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Vacancies_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateVacancyRequest"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded and a new resource has been created as a result. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Vacancy"];
                 };
             };
             /** @description The request was rejected because one or more fields are invalid. */

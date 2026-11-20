@@ -7,6 +7,7 @@ tags:
   - name: Health
   - name: Identity
   - name: Resumes
+  - name: Vacancies
 paths:
   /auth/login:
     post:
@@ -279,6 +280,84 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SaveResumeRequest'
+  /vacancies:
+    post:
+      operationId: Vacancies_create
+      description: Paste a vacancy owned by the signed-in user. Missing, blank or oversized fields are rejected with 400 problem details whose errors are keyed by field; nothing is stored.
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vacancy'
+        '400':
+          description: The request was rejected because one or more fields are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '401':
+          description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Vacancies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVacancyRequest'
+    get:
+      operationId: Vacancies_list
+      description: List only the signed-in user's vacancies, newest first (ties broken deterministically), one page at a time. A page beyond the end returns empty items. An out-of-range page or page size is rejected with 400.
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: 1-based page number. Defaults to 1.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            default: 1
+          explode: false
+        - name: pageSize
+          in: query
+          required: false
+          description: Number of items per page, between 1 and 100. Defaults to 20.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VacancyPage'
+        '400':
+          description: The request was rejected because one or more fields are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '401':
+          description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Vacancies
 security:
   - BearerAuth: []
 components:
@@ -344,6 +423,32 @@ components:
           pattern: \S
           description: Name of the bureau. Must contain at least one non-whitespace character; a name made only of whitespace is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored.
       description: The details needed to add a bureau. The owner is always the signed-in user; any owner supplied is ignored.
+    CreateVacancyRequest:
+      type: object
+      required:
+        - title
+        - company
+        - rawText
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          pattern: \S
+          description: Job title. Must contain at least one non-whitespace character. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored.
+        company:
+          type: string
+          minLength: 1
+          maxLength: 200
+          pattern: \S
+          description: Hiring company. Must contain at least one non-whitespace character. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored.
+        rawText:
+          type: string
+          minLength: 1
+          maxLength: 20000
+          pattern: \S
+          description: The pasted vacancy text. Must contain at least one non-whitespace character. At most 20,000 characters, counted as sent in UTF-16 code units (JavaScript string length), with no trimming before counting; stored exactly as sent.
+      description: The vacancy to paste. The owner is always the signed-in user; any owner, id or creation time supplied is ignored.
     CurrentUser:
       type: object
       required:
@@ -493,6 +598,86 @@ components:
           pattern: \S
           description: Plain-text resume. Must contain at least one non-whitespace character; blank or whitespace-only text is rejected with 400. At most 20,000 characters, counted as sent in UTF-16 code units (JavaScript string length), with no trimming before counting.
       description: The resume text to save. The signed-in user's single resume is created or replaced.
+    Vacancy:
+      type: object
+      required:
+        - id
+        - title
+        - company
+        - rawText
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifier of the vacancy.
+        title:
+          type: string
+          description: Job title, trimmed.
+        company:
+          type: string
+          description: Hiring company, trimmed.
+        rawText:
+          type: string
+          description: The vacancy text, exactly as pasted.
+        createdAt:
+          type: string
+          format: date-time
+          description: When the vacancy was created, in UTC, taken from the application clock.
+      description: A vacancy owned by the signed-in user.
+    VacancyListItem:
+      type: object
+      required:
+        - id
+        - title
+        - company
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifier of the vacancy.
+        title:
+          type: string
+          description: Job title.
+        company:
+          type: string
+          description: Hiring company.
+        createdAt:
+          type: string
+          format: date-time
+          description: When the vacancy was created, in UTC.
+      description: A vacancy as shown in the list; the raw text is not included.
+    VacancyPage:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/VacancyListItem'
+          description: The vacancies on this page.
+        total:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Total number of the signed-in user's vacancies across all pages.
+        page:
+          type: integer
+          format: int32
+          minimum: 1
+          description: The 1-based page that was returned.
+        pageSize:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+          description: The maximum number of items per page that was applied.
+      description: One page of the signed-in user's vacancies, newest first.
     ValidationProblemDetails:
       type: object
       required:
