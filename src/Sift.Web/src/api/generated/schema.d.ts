@@ -185,7 +185,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Get one of the signed-in user's vacancies in full. A malformed id, an unknown id and another user's vacancy all return the same 404. */
+        /** @description Get one of the signed-in user's vacancies in full, scored against the user's own resume and requirements. The score is worked out on every request and never stored. A malformed id, an unknown id and another user's vacancy all return the same 404 and nothing is scored. */
         get: operations["Vacancies_get"];
         put?: never;
         post?: never;
@@ -300,6 +300,11 @@ export interface components {
              */
             expiresAt: string;
         };
+        /**
+         * @description An input the signed-in user must provide before a vacancy can be scored.
+         * @enum {string}
+         */
+        MatchInput: "resume" | "requirements";
         /** @description RFC 7807 problem details. Every error response uses this shape. */
         ProblemDetails: {
             /** @description A URI reference that identifies the problem type. */
@@ -386,6 +391,17 @@ export interface components {
              */
             pageSize: number;
         };
+        /** @description The verdict for one of the signed-in user's requirements. */
+        RequirementVerdict: {
+            /** @description The requirement term. */
+            requirement: string;
+            /** @description Whether the requirement is a must-have or a nice-to-have. */
+            kind: components["schemas"]["RequirementKind"];
+            /** @description Whether the term was found in the vacancy text. */
+            verdict: components["schemas"]["VerdictOutcome"];
+            /** @description Names the requirement term and says whether it was found in the vacancy text. */
+            explanation: string;
+        };
         /** @description The signed-in user's resume. */
         Resume: {
             /** @description Plain-text resume, exactly as saved. */
@@ -420,6 +436,27 @@ export interface components {
              */
             createdAt: string;
         };
+        /** @description A vacancy owned by the signed-in user, together with how it scores. */
+        VacancyDetail: {
+            /**
+             * Format: uuid
+             * @description Identifier of the vacancy.
+             */
+            id: string;
+            /** @description Job title, trimmed. */
+            title: string;
+            /** @description Hiring company, trimmed. */
+            company: string;
+            /** @description The vacancy text, exactly as pasted. */
+            rawText: string;
+            /**
+             * Format: date-time
+             * @description When the vacancy was created, in UTC, taken from the application clock.
+             */
+            createdAt: string;
+            /** @description How the vacancy scores against the signed-in user's resume and requirements. */
+            match: components["schemas"]["VacancyMatch"];
+        };
         /** @description A vacancy as shown in the list; the raw text is not included. */
         VacancyListItem: {
             /**
@@ -436,6 +473,15 @@ export interface components {
              * @description When the vacancy was created, in UTC.
              */
             createdAt: string;
+        };
+        /** @description How a vacancy scores against the signed-in user's resume and requirements. It is worked out each time the vacancy is opened and is never stored. Without a resume or without requirements there is no score and no verdicts, and the missing inputs are listed instead. */
+        VacancyMatch: {
+            /** @description Overall score, an integer from 0 to 100. A vacancy meeting every must-have scores at least 50; one with an unmet must-have scores at most 49. Null when an input is missing. */
+            score: number | null;
+            /** @description One verdict per requirement, unmet must-haves first. Empty when an input is missing. */
+            verdicts: components["schemas"]["RequirementVerdict"][];
+            /** @description The inputs the user still has to provide, resume first. Empty when the vacancy was scored. */
+            missingInputs: components["schemas"]["MatchInput"][];
         };
         /** @description One page of the signed-in user's vacancies, newest first. */
         VacancyPage: {
@@ -477,6 +523,11 @@ export interface components {
                 [key: string]: string[];
             };
         };
+        /**
+         * @description Whether one requirement was found in the vacancy text.
+         * @enum {string}
+         */
+        VerdictOutcome: "met" | "not met";
     };
     responses: never;
     parameters: never;
@@ -1058,7 +1109,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Vacancy"];
+                    "application/json": components["schemas"]["VacancyDetail"];
                 };
             };
             /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
