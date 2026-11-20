@@ -6,6 +6,7 @@ tags:
   - name: Bureaus
   - name: Health
   - name: Identity
+  - name: Requirements
   - name: Resumes
 paths:
   /auth/login:
@@ -222,6 +223,118 @@ paths:
         - Health
       security:
         - {}
+  /requirements:
+    post:
+      operationId: Requirements_create
+      description: Add a requirement owned by the signed-in user. Blank text or an invalid or missing kind returns 400; text the user already has (case-insensitively, after trimming) returns 409.
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Requirement'
+        '400':
+          description: The request was rejected because one or more fields are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '401':
+          description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: An account already exists for the given email address.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Requirements
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRequirementRequest'
+    get:
+      operationId: Requirements_list
+      description: List only the signed-in user's requirements, one page at a time. An out-of-range page or page size is rejected with 400.
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: 1-based page number. Defaults to 1.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            default: 1
+          explode: false
+        - name: pageSize
+          in: query
+          required: false
+          description: Number of items per page, between 1 and 100. Defaults to 20.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequirementPage'
+        '400':
+          description: The request was rejected because one or more fields are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '401':
+          description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Requirements
+  /requirements/{id}:
+    delete:
+      operationId: Requirements_delete
+      description: Delete one of the signed-in user's requirements. Another user's requirement returns 404, same as a missing one.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        '401':
+          description: The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: The resource does not exist or is not owned by the signed-in user. The two cases are indistinguishable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      tags:
+        - Requirements
   /resume:
     get:
       operationId: Resumes_getMyResume
@@ -344,6 +457,22 @@ components:
           pattern: \S
           description: Name of the bureau. Must contain at least one non-whitespace character; a name made only of whitespace is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored.
       description: The details needed to add a bureau. The owner is always the signed-in user; any owner supplied is ignored.
+    CreateRequirementRequest:
+      type: object
+      required:
+        - text
+        - kind
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 200
+          pattern: \S
+          description: Free text of the requirement. Must contain at least one non-whitespace character; whitespace-only text is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. Unique per user, compared case-insensitively after trimming; a duplicate is rejected with 409.
+        kind:
+          $ref: '#/components/schemas/RequirementKind'
+          description: Whether the requirement is a must-have or a nice-to-have. Required; any other value is rejected with 400.
+      description: The details needed to add a job requirement. The owner is always the signed-in user; any owner supplied is ignored.
     CurrentUser:
       type: object
       required:
@@ -467,6 +596,65 @@ components:
           format: date-time
           description: When the account was created, in UTC.
       description: The account that was created. Never contains the password or its hash.
+    Requirement:
+      type: object
+      required:
+        - id
+        - text
+        - kind
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifier of the requirement.
+        text:
+          type: string
+          description: Free text of the requirement.
+        kind:
+          $ref: '#/components/schemas/RequirementKind'
+          description: Whether the requirement is a must-have or a nice-to-have.
+        createdAt:
+          type: string
+          format: date-time
+          description: When the requirement was created, in UTC.
+      description: A job requirement owned by the signed-in user.
+    RequirementKind:
+      type: string
+      enum:
+        - must-have
+        - nice-to-have
+      description: 'How strongly a requirement counts: a must-have is a deal-breaker, a nice-to-have is a bonus.'
+    RequirementPage:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Requirement'
+          description: The requirements on this page.
+        total:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Total number of the signed-in user's requirements across all pages.
+        page:
+          type: integer
+          format: int32
+          minimum: 1
+          description: The 1-based page that was returned.
+        pageSize:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+          description: The maximum number of items per page that was applied.
+      description: One page of the signed-in user's requirements, oldest first.
     Resume:
       type: object
       required:
