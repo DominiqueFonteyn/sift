@@ -68,6 +68,44 @@ namespace Sift.Infrastructure.Persistence.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("Sift.Domain.Recruiters.Recruiter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LinkedInUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId");
+
+                    b.ToTable("Recruiters", (string)null);
+                });
+
             modelBuilder.Entity("Sift.Domain.Requirements.Requirement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -157,6 +195,15 @@ namespace Sift.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Sift.Domain.Bureaus.Bureau", b =>
+                {
+                    b.HasOne("Sift.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Sift.Domain.Recruiters.Recruiter", b =>
                 {
                     b.HasOne("Sift.Domain.Identity.User", null)
                         .WithMany()
