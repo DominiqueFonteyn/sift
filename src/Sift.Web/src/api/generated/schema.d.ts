@@ -107,6 +107,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/requirements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List only the signed-in user's requirements, one page at a time. An out-of-range page or page size is rejected with 400. */
+        get: operations["Requirements_list"];
+        put?: never;
+        /** @description Add a requirement owned by the signed-in user. Blank text or an invalid or missing kind returns 400; text the user already has (case-insensitively, after trimming) returns 409. */
+        post: operations["Requirements_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/requirements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Delete one of the signed-in user's requirements. Another user's requirement returns 404, same as a missing one. */
+        delete: operations["Requirements_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/resume": {
         parameters: {
             query?: never;
@@ -168,6 +203,13 @@ export interface components {
         CreateBureauRequest: {
             /** @description Name of the bureau. Must contain at least one non-whitespace character; a name made only of whitespace is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. */
             name: string;
+        };
+        /** @description The details needed to add a job requirement. The owner is always the signed-in user; any owner supplied is ignored. */
+        CreateRequirementRequest: {
+            /** @description Free text of the requirement. Must contain at least one non-whitespace character; whitespace-only text is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. Unique per user, compared case-insensitively after trimming; a duplicate is rejected with 409. */
+            text: string;
+            /** @description Whether the requirement is a must-have or a nice-to-have. Required; any other value is rejected with 400. */
+            kind: components["schemas"]["RequirementKind"];
         };
         /** @description The account of the signed-in user. */
         CurrentUser: {
@@ -257,6 +299,48 @@ export interface components {
              * @description When the account was created, in UTC.
              */
             createdAt: string;
+        };
+        /** @description A job requirement owned by the signed-in user. */
+        Requirement: {
+            /**
+             * Format: uuid
+             * @description Identifier of the requirement.
+             */
+            id: string;
+            /** @description Free text of the requirement. */
+            text: string;
+            /** @description Whether the requirement is a must-have or a nice-to-have. */
+            kind: components["schemas"]["RequirementKind"];
+            /**
+             * Format: date-time
+             * @description When the requirement was created, in UTC.
+             */
+            createdAt: string;
+        };
+        /**
+         * @description How strongly a requirement counts: a must-have is a deal-breaker, a nice-to-have is a bonus.
+         * @enum {string}
+         */
+        RequirementKind: "must-have" | "nice-to-have";
+        /** @description One page of the signed-in user's requirements, oldest first. */
+        RequirementPage: {
+            /** @description The requirements on this page. */
+            items: components["schemas"]["Requirement"][];
+            /**
+             * Format: int32
+             * @description Total number of the signed-in user's requirements across all pages.
+             */
+            total: number;
+            /**
+             * Format: int32
+             * @description The 1-based page that was returned.
+             */
+            page: number;
+            /**
+             * Format: int32
+             * @description The maximum number of items per page that was applied.
+             */
+            pageSize: number;
         };
         /** @description The signed-in user's resume. */
         Resume: {
@@ -551,6 +635,138 @@ export interface operations {
             };
             /** @description An unexpected error response. */
             default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Requirements_list: {
+        parameters: {
+            query?: {
+                /** @description 1-based page number. Defaults to 1. */
+                page?: number;
+                /** @description Number of items per page, between 1 and 100. Defaults to 20. */
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequirementPage"];
+                };
+            };
+            /** @description The request was rejected because one or more fields are invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationProblemDetails"];
+                };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Requirements_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRequirementRequest"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded and a new resource has been created as a result. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Requirement"];
+                };
+            };
+            /** @description The request was rejected because one or more fields are invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationProblemDetails"];
+                };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description An account already exists for the given email address. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Requirements_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description There is no content to send for this request, but the headers may be useful. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The resource does not exist or is not owned by the signed-in user. The two cases are indistinguishable. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
