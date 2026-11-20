@@ -7,16 +7,21 @@ import { RequirementsEditor } from './requirements/RequirementsEditor';
 import { ResumeEditor } from './resume/ResumeEditor';
 import { NewVacancyPage } from './vacancies/NewVacancyPage';
 import { useVacancyView } from './vacancies/useVacancyView';
+import { VacancyDetailPage } from './vacancies/VacancyDetailPage';
 import { VacancyList } from './vacancies/VacancyList';
 
 function Vacancies() {
   const { view, show } = useVacancyView();
 
-  return view === 'new' ? (
-    <NewVacancyPage onSaved={() => show('list')} onCancel={() => show('list')} />
-  ) : (
-    <VacancyList onPaste={() => show('new')} />
-  );
+  if (view.kind === 'new') {
+    return <NewVacancyPage onSaved={() => show({ kind: 'list' })} onCancel={() => show({ kind: 'list' })} />;
+  }
+
+  if (view.kind === 'detail') {
+    return <VacancyDetailPage id={view.id} onBack={() => show({ kind: 'list' })} />;
+  }
+
+  return <VacancyList onPaste={() => show({ kind: 'new' })} />;
 }
 
 export function App() {

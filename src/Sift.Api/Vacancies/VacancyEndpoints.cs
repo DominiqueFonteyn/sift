@@ -70,6 +70,31 @@ public static class VacancyEndpoints
             })
             .WithName("Vacancies_list");
 
+        // No route constraint: a malformed id must get the same problem body as a missing or foreign one.
+        group.MapGet("/{id}", async (
+                string id,
+                ClaimsPrincipal principal,
+                IVacancyQueries queries,
+                CancellationToken cancellationToken) =>
+            {
+                if (!principal.TryGetUserId(out var userId))
+                {
+                    return ProblemResults.InvalidToken();
+                }
+
+                if (!Guid.TryParse(id, out var vacancyId))
+                {
+                    return ProblemResults.NotFound();
+                }
+
+                var vacancy = await queries.GetAsync(userId, vacancyId, cancellationToken);
+
+                return vacancy is null
+                    ? ProblemResults.NotFound()
+                    : Results.Ok(new VacancyResponse(vacancy.Id, vacancy.Title, vacancy.Company, vacancy.RawText, vacancy.CreatedAt));
+            })
+            .WithName("Vacancies_get");
+
         return endpoints;
     }
 }

@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { formatVacancyDate } from './formatVacancyDate';
 import { useVacancies, vacanciesPageSize } from './useVacancies';
+import { vacancyHash } from './useVacancyView';
 
 type VacancyListProps = {
   onPaste: () => void;
@@ -56,14 +58,16 @@ export function VacancyList({ onPaste }: VacancyListProps) {
               <li key={vacancy.id} data-testid="vacancy-row" className="flex items-baseline justify-between gap-4 py-2">
                 <div>
                   <p data-testid="vacancy-title" className="font-medium">
-                    {vacancy.title}
+                    <a href={vacancyHash(vacancy.id)} className="hover:underline">
+                      {vacancy.title}
+                    </a>
                   </p>
                   <p data-testid="vacancy-company" className="text-sm text-slate-600">
                     {vacancy.company}
                   </p>
                 </div>
                 <time data-testid="vacancy-created" dateTime={vacancy.createdAt} className="text-xs text-slate-500">
-                  {new Date(vacancy.createdAt).toLocaleDateString()}
+                  {formatVacancyDate(vacancy.createdAt)}
                 </time>
               </li>
             ))}

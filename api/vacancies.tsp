@@ -103,4 +103,9 @@ interface Vacancies {
     @maxValue(100)
     pageSize?: int32 = 20,
   ): VacancyPage | BadRequestProblem | UnauthorizedProblem;
+
+  @doc("Get one of the signed-in user's vacancies in full. A malformed id, an unknown id and another user's vacancy all return the same 404.")
+  @route("/{id}")
+  @get
+  get(@path @format("uuid") id: string): Vacancy | UnauthorizedProblem | NotFoundProblem;
 }
