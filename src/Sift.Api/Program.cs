@@ -50,6 +50,7 @@ builder.Services.AddScoped<DeleteRequirementHandler>();
 builder.Services.AddScoped<SaveMyResumeHandler>();
 builder.Services.AddScoped<CreateVacancyHandler>();
 builder.Services.AddScoped<OpenVacancyHandler>();
+builder.Services.AddScoped<ListVacanciesHandler>();
 builder.Services.AddScoped<DeleteVacancyHandler>();
 builder.Services.AddSingleton<IMatchEngine, RuleBasedMatchEngine>();
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy

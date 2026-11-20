@@ -11,6 +11,9 @@ namespace Sift.Api.Vacancies;
 
 public static class VacancyEndpoints
 {
+    private const string Met = "met";
+    private const string NotMet = "not met";
+
     public static IEndpointRouteBuilder MapVacancyEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/vacancies").WithTags("Vacancies").RequireAuthorization();
@@ -50,7 +53,7 @@ public static class VacancyEndpoints
                 string? page,
                 string? pageSize,
                 ClaimsPrincipal principal,
-                IVacancyQueries queries,
+                ListVacanciesHandler handler,
                 CancellationToken cancellationToken) =>
             {
                 if (!principal.TryGetUserId(out var userId))
@@ -63,13 +66,14 @@ public static class VacancyEndpoints
                     return ProblemResults.Validation(errors);
                 }
 
-                var vacancies = await queries.ListAsync(userId, pageRequest, cancellationToken);
+                var result = await handler.HandleAsync(new ListVacanciesQuery(userId, pageRequest), cancellationToken);
 
                 return Results.Ok(new VacancyPageResponse(
-                    vacancies.Items.Select(vacancy => new VacancyListItemResponse(vacancy.Id, vacancy.Title, vacancy.Company, vacancy.CreatedAt)).ToList(),
-                    vacancies.Total,
+                    result.Page.Items.Select(ToListItem).ToList(),
+                    result.Page.Total,
                     pageRequest.Page,
-                    pageRequest.PageSize));
+                    pageRequest.PageSize,
+                    result.Missing.Select(ToName).ToList()));
             })
             .WithName("Vacancies_list");
 
@@ -132,6 +136,22 @@ public static class VacancyEndpoints
         return endpoints;
     }
 
+    private static VacancyListItemResponse ToListItem(VacancyListItem item)
+    {
+        var verdicts = item.Match?.Verdicts.Select(ToResponse).ToList() ?? [];
+
+        return new VacancyListItemResponse(
+            item.Id, item.Title, item.Company, item.CreatedAt, item.Match?.Score, item.UnmetMustHaves.Count > 0, item.UnmetMustHaves, verdicts);
+    }
+
+    private static RequirementVerdictResponse ToResponse(RequirementVerdict verdict) => new(
+        verdict.Term,
+        RequirementKinds.ToName(verdict.Kind),
+        verdict.Verdict == Verdict.Met ? Met : NotMet,
+        verdict.Explanation);
+
+    private static string ToName(MatchInput input) => input == MatchInput.Resume ? "resume" : "requirements";
+
     private static VacancyDetailResponse ToResponse(OpenVacancyResult.Opened opened) => new(
         opened.Vacancy.Id,
         opened.Vacancy.Title,
@@ -146,14 +166,14 @@ public static class VacancyEndpoints
                     .Select(verdict => new RequirementVerdictResponse(
                         verdict.Term,
                         RequirementKinds.ToName(verdict.Kind),
-                        verdict.Verdict == Verdict.Met ? "met" : "not met",
+                        verdict.Verdict == Verdict.Met ? Met : NotMet,
                         verdict.Explanation))
                     .ToList(),
                 []),
             VacancyMatchOutcome.NothingToScore nothing => new VacancyMatchResponse(
                 null,
                 [],
-                nothing.Missing.Select(input => input == MatchInput.Resume ? "resume" : "requirements").ToList()),
+                nothing.Missing.Select(input => ToName(input)).ToList()),
             _ => throw new InvalidOperationException($"Unhandled outcome {opened.Match.GetType().Name}.")
         });
 }

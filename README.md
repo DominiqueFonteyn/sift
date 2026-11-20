@@ -4,9 +4,10 @@ Sift helps a job seeker manage recruiters, recruitment bureaus and vacancies, an
 vacancy against their resume and their own must-have / nice-to-have requirements — so the evening
 goes to the three roles that fit instead of the thirty that do not.
 
-Status: **walking skeleton in place; identity in progress.** Users can register with an email and
-password (`POST /auth/register`), log in to receive a JWT (`POST /auth/login`) and log out in the UI;
-the remaining features follow in later stories.
+Status: **MVP core in place.** Users can register and log in (JWT), save a resume and
+must-have / nice-to-have requirements, paste vacancies, and see each vacancy scored against them.
+The vacancy list is ranked by match score (then newest first) with the reasons shown on each row;
+recruiters, bureaus and the remaining features follow in later stories.
 
 ## Documentation
 

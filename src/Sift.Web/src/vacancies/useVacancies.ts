@@ -3,12 +3,13 @@ import { apiClient } from '../api/client';
 import type { components } from '../api/generated/schema';
 
 export type VacancyListItem = components['schemas']['VacancyListItem'];
+export type MissingInput = components['schemas']['MatchInput'];
 
 export const vacanciesPageSize = 20;
 
 export type VacanciesState =
   | { kind: 'loading' }
-  | { kind: 'loaded'; items: VacancyListItem[]; total: number }
+  | { kind: 'loaded'; items: VacancyListItem[]; total: number; missingInputs: MissingInput[] }
   | { kind: 'failed'; detail: string };
 
 // Changing reloadKey refetches the page, e.g. after a delete.
@@ -30,7 +31,7 @@ export function useVacancies(page: number, reloadKey = 0): VacanciesState {
       .then(({ data, error }) => {
         finish(
           data
-            ? { kind: 'loaded', items: data.items, total: data.total }
+            ? { kind: 'loaded', items: data.items, total: data.total, missingInputs: data.missingInputs }
             : { kind: 'failed', detail: error?.detail ?? error?.title ?? 'Could not load your vacancies.' },
         );
       })

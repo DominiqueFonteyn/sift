@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MissingInputLinks, missingInputs } from './MissingInputs';
 import { deleteVacancy } from './deleteVacancy';
 import { formatVacancyDate } from './formatVacancyDate';
 import { useVacancies, vacanciesPageSize } from './useVacancies';
@@ -76,23 +77,55 @@ export function VacancyList({ onPaste }: VacancyListProps) {
       )}
       {state.kind === 'loaded' && state.items.length > 0 && (
         <>
+          {state.missingInputs.length > 0 && (
+            <div data-testid="vacancies-missing" className="mt-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm">
+              <p>Vacancies cannot be scored yet. Missing: {state.missingInputs.map((input) => missingInputs[input].label).join(', ')}.</p>
+              <MissingInputLinks inputs={state.missingInputs} testIdPrefix="vacancies-missing" />
+            </div>
+          )}
           <ul className="mt-2 divide-y divide-slate-200">
             {state.items.map((vacancy) => (
-              <li key={vacancy.id} data-testid="vacancy-row" className="flex items-baseline justify-between gap-4 py-2">
-                <div>
-                  <p data-testid="vacancy-title" className="font-medium">
-                    <a href={vacancyHash(vacancy.id)} className="hover:underline">
-                      {vacancy.title}
-                    </a>
-                  </p>
-                  <p data-testid="vacancy-company" className="text-sm text-slate-600">
-                    {vacancy.company}
-                  </p>
+              <li key={vacancy.id} data-testid="vacancy-row" className="flex flex-col gap-1 py-2">
+                <div className="flex items-baseline justify-between gap-4">
+                  <div>
+                    <p data-testid="vacancy-title" className="font-medium">
+                      <a href={vacancyHash(vacancy.id)} className="hover:underline">
+                        {vacancy.title}
+                      </a>
+                    </p>
+                    <p data-testid="vacancy-company" className="text-sm text-slate-600">
+                      {vacancy.company}
+                    </p>
+                  </div>
+                  <div className="flex items-baseline gap-3">
+                    {vacancy.score !== null && (
+                      <span
+                        data-testid="vacancy-row-score"
+                        className={`text-lg font-semibold ${vacancy.failsMustHave ? 'text-red-700' : 'text-green-700'}`}
+                      >
+                        {vacancy.score}
+                      </span>
+                    )}
+                    <time data-testid="vacancy-created" dateTime={vacancy.createdAt} className="text-xs text-slate-500">
+                      {formatVacancyDate(vacancy.createdAt)}
+                    </time>
+                  </div>
                 </div>
+                {vacancy.failsMustHave && (
+                  <p data-testid="vacancy-must-have-failed" className="text-sm font-medium text-red-700">
+                    Fails must-have: {vacancy.unmetMustHaves.join(', ')}
+                  </p>
+                )}
+                {vacancy.verdicts.length > 0 && (
+                  <ul aria-label="Why this score" className="text-sm text-slate-600">
+                    {vacancy.verdicts.map((verdict) => (
+                      <li key={`${verdict.kind}:${verdict.requirement}`} data-testid="vacancy-row-explanation">
+                        {verdict.explanation}
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <div className="flex items-center gap-3">
-                  <time data-testid="vacancy-created" dateTime={vacancy.createdAt} className="text-xs text-slate-500">
-                    {formatVacancyDate(vacancy.createdAt)}
-                  </time>
                   {confirmingId === vacancy.id ? (
                     <span className="flex items-center gap-2 text-xs">
                       <span>Delete this vacancy?</span>

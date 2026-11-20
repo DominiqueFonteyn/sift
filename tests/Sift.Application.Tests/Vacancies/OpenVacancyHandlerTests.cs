@@ -157,8 +157,8 @@ public sealed class OpenVacancyHandlerTests
 
         public void Add(Guid ownerId, VacancyDetail vacancy) => stored.Add((ownerId, vacancy));
 
-        public Task<PagedResult<VacancyListItem>> ListAsync(Guid ownerId, PageRequest page, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
+        public Task<IReadOnlyList<VacancyDetail>> ListAllAsync(Guid ownerId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<VacancyDetail>>(stored.Where(s => s.OwnerId == ownerId).Select(s => s.Vacancy).ToList());
 
         public Task<VacancyDetail?> GetAsync(Guid ownerId, Guid vacancyId, CancellationToken cancellationToken) =>
             Task.FromResult(stored.Where(s => s.OwnerId == ownerId && s.Vacancy.Id == vacancyId).Select(s => s.Vacancy).FirstOrDefault());
