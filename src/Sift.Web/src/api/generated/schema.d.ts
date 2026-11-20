@@ -189,7 +189,8 @@ export interface paths {
         get: operations["Vacancies_get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** @description Permanently delete one of the signed-in user's vacancies. A malformed id, an unknown id, an already-deleted vacancy and another user's vacancy all return the same 404 and nothing is changed. */
+        delete: operations["Vacancies_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1111,6 +1112,44 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["VacancyDetail"];
                 };
+            };
+            /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The resource does not exist or is not owned by the signed-in user. The two cases are indistinguishable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Vacancies_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description There is no content to send for this request, but the headers may be useful. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
             401: {

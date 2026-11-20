@@ -177,4 +177,11 @@ interface Vacancies {
   @route("/{id}")
   @get
   get(@path @format("uuid") id: string): VacancyDetail | UnauthorizedProblem | NotFoundProblem;
+
+  @doc("Permanently delete one of the signed-in user's vacancies. A malformed id, an unknown id, an already-deleted vacancy and another user's vacancy all return the same 404 and nothing is changed.")
+  @route("/{id}")
+  @delete
+  delete(@path @format("uuid") id: string): {
+    @statusCode _: 204;
+  } | UnauthorizedProblem | NotFoundProblem;
 }
