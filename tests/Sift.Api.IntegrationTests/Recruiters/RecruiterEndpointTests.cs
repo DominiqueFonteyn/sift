@@ -1,7 +1,10 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Sift.Api.IntegrationTests.Recruiters;
 
@@ -173,6 +176,31 @@ public sealed class RecruiterEndpointTests(SiftApiFactory factory) : IClassFixtu
         Assert.Equal(before, await TotalAsync(signedIn));
     }
 
+    [Theory]
+    [InlineData("GET", "malformed")]
+    [InlineData("POST", "malformed")]
+    [InlineData("GET", "expired")]
+    [InlineData("POST", "expired")]
+    public async Task A_malformed_or_expired_token_is_a_401_problem_and_stores_nothing(string method, string kind)
+    {
+        using var signedIn = await AuthenticatedClient.CreateSignedInAsync(factory);
+        var userId = await AuthenticatedClient.GetUserIdAsync(signedIn);
+        var before = await TotalAsync(signedIn);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", kind == "malformed" ? "not-a-jwt" : ExpiredToken(userId));
+
+        var response = await client.SendAsync(new HttpRequestMessage(new HttpMethod(method), "/recruiters")
+        {
+            Content = method == "POST" ? JsonContent.Create(new { name = "Expired Token Nobody" }) : null
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        var list = await signedIn.GetFromJsonAsync<JsonElement>("/recruiters");
+        Assert.Equal(before, list.GetProperty("total").GetInt32());
+        Assert.DoesNotContain("Expired Token Nobody", Names(list));
+    }
+
     [Fact]
     public async Task Lists_are_paged_oldest_first_like_bureaus()
     {
@@ -212,6 +240,24 @@ public sealed class RecruiterEndpointTests(SiftApiFactory factory) : IClassFixtu
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         var errors = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors");
         Assert.Equal(field, Assert.Single(errors.EnumerateObject()).Name);
+    }
+
+    private static string ExpiredToken(Guid userId)
+    {
+        var now = DateTime.UtcNow;
+
+        return new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
+        {
+            Issuer = "sift",
+            Audience = "sift",
+            Claims = new Dictionary<string, object> { [JwtRegisteredClaimNames.Sub] = userId.ToString() },
+            IssuedAt = now.AddHours(-2),
+            NotBefore = now.AddHours(-2),
+            Expires = now.AddMinutes(-1),
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SiftApiFactory.TestSigningKey)),
+                SecurityAlgorithms.HmacSha256)
+        });
     }
 
     private static string?[] Names(JsonElement page) =>
