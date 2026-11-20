@@ -66,6 +66,7 @@ public sealed class RequirementTests
         Assert.True(RequirementKinds.TryParse(name, out var kind));
         Assert.Equal(expected, kind);
         Assert.Equal(name, RequirementKinds.ToName(kind));
+        Assert.Equal(expected, RequirementKinds.Parse(name));
     }
 
     [Theory]
@@ -73,8 +74,11 @@ public sealed class RequirementTests
     [InlineData("")]
     [InlineData("mandatory")]
     [InlineData("Must-Have")]
-    public void Rejects_any_other_kind(string? name) =>
+    public void Rejects_any_other_kind(string? name)
+    {
         Assert.False(RequirementKinds.TryParse(name, out _));
+        Assert.Throws<FormatException>(() => RequirementKinds.Parse(name!));
+    }
 
     [Fact]
     public void Rejects_an_undefined_kind() =>

@@ -4,6 +4,8 @@ import type { components } from '../api/generated/schema';
 
 export type Requirement = components['schemas']['Requirement'];
 export type RequirementKind = components['schemas']['RequirementKind'];
+type ValidationProblem = components['schemas']['ValidationProblemDetails'];
+type Problem = components['schemas']['ProblemDetails'];
 
 export type RequirementsState =
   | { kind: 'loading' }
@@ -18,11 +20,29 @@ function reasonMessage(reason: unknown, fallback: string): string {
   return reason instanceof Error ? reason.message : fallback;
 }
 
-type ProblemLike = { title?: string; detail?: string; errors?: Record<string, string[]> };
-
-function validationMessage(error: ProblemLike | undefined, fallback: string): string {
-  const first = error?.errors ? Object.values(error.errors).flat()[0] : undefined;
+function validationMessage(error: ValidationProblem | Problem | undefined, fallback: string): string {
+  const errors = error && 'errors' in error ? error.errors : undefined;
+  const first = errors ? Object.values(errors).flat()[0] : undefined;
   return first ?? error?.detail ?? error?.title ?? fallback;
+}
+
+// Requirements feed matching, so the editor shows all of them rather than one page.
+async function loadAll(): Promise<{ items: Requirement[] } | { detail: string }> {
+  const items: Requirement[] = [];
+
+  for (let page = 1; ; page++) {
+    const { data, error } = await apiClient.GET('/requirements', { params: { query: { page, pageSize } } });
+
+    if (!data) {
+      return { detail: error?.detail ?? error?.title ?? 'Could not load your requirements.' };
+    }
+
+    items.push(...data.items);
+
+    if (data.items.length === 0 || items.length >= data.total) {
+      return { items };
+    }
+  }
 }
 
 export function useRequirements() {
@@ -31,18 +51,13 @@ export function useRequirements() {
   useEffect(() => {
     let cancelled = false;
 
-    apiClient
-      .GET('/requirements', { params: { query: { pageSize } } })
-      .then(({ data, error }) => {
+    loadAll()
+      .then((result) => {
         if (cancelled) {
           return;
         }
 
-        if (data) {
-          setState({ kind: 'ready', items: data.items });
-        } else {
-          setState({ kind: 'failed', detail: error?.detail ?? error?.title ?? 'Could not load your requirements.' });
-        }
+        setState('items' in result ? { kind: 'ready', items: result.items } : { kind: 'failed', detail: result.detail });
       })
       .catch((reason: unknown) => {
         if (!cancelled) {

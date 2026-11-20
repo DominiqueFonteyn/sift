@@ -1,6 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Sift.Domain.Requirements;
+using Sift.Infrastructure.Persistence;
 
 namespace Sift.Api.IntegrationTests.Requirements;
 
@@ -23,6 +27,20 @@ public sealed class RequirementEndpointTests(SiftApiFactory factory) : IClassFix
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Equal(ProblemJson, response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task An_anonymous_create_stores_nothing()
+    {
+        using var client = factory.CreateClient();
+        var text = $"Anonymous {Guid.NewGuid():N}";
+
+        var response = await client.PostAsJsonAsync("/requirements", new { text, kind = "must-have" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<SiftDbContext>();
+        Assert.False(await dbContext.Set<Requirement>().AnyAsync(requirement => requirement.Text == text));
     }
 
     [Fact]

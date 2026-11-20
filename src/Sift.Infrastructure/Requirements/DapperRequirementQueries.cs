@@ -4,7 +4,6 @@ using Sift.Application.Common;
 using Sift.Application.Requirements;
 using Sift.Domain.Requirements;
 using Sift.Infrastructure.Persistence;
-using Sift.Infrastructure.Persistence.Configurations;
 
 namespace Sift.Infrastructure.Requirements;
 
@@ -34,6 +33,6 @@ public sealed class DapperRequirementQueries(ISiftConnectionFactory connectionFa
     private static RequirementReadModel ToReadModel(Row row) => new(
         Guid.Parse(row.Id),
         row.Text,
-        RequirementConfiguration.ParseKind(row.Kind),
+        RequirementKinds.Parse(row.Kind),
         DateTimeOffset.Parse(row.CreatedAt, CultureInfo.InvariantCulture));
 }

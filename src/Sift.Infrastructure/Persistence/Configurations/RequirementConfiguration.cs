@@ -17,7 +17,7 @@ public sealed class RequirementConfiguration : IEntityTypeConfiguration<Requirem
         builder.Property(requirement => requirement.Text).HasMaxLength(Requirement.TextMaxLength).IsRequired();
         builder.Property(requirement => requirement.NormalizedText).HasMaxLength(Requirement.TextMaxLength).IsRequired();
         builder.Property(requirement => requirement.Kind)
-            .HasConversion(kind => RequirementKinds.ToName(kind), name => ParseKind(name))
+            .HasConversion(kind => RequirementKinds.ToName(kind), name => RequirementKinds.Parse(name))
             .HasMaxLength(20)
             .IsRequired();
         builder.Property(requirement => requirement.CreatedAt).IsRequired();
@@ -25,9 +25,4 @@ public sealed class RequirementConfiguration : IEntityTypeConfiguration<Requirem
         builder.HasOne<User>().WithMany().HasForeignKey(requirement => requirement.OwnerId).IsRequired().OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(requirement => new { requirement.OwnerId, requirement.NormalizedText }).IsUnique();
     }
-
-    public static RequirementKind ParseKind(string name) =>
-        RequirementKinds.TryParse(name, out var kind)
-            ? kind
-            : throw new InvalidOperationException($"Unknown requirement kind '{name}' in the database.");
 }

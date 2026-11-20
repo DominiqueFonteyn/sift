@@ -8,7 +8,8 @@ namespace Sift.Infrastructure.Requirements;
 
 public sealed class EfRequirementRepository(SiftDbContext dbContext) : IRequirementRepository
 {
-    private const int SqliteConstraintErrorCode = 19;
+    // SQLITE_CONSTRAINT_UNIQUE only, so a foreign-key failure is not mistaken for a duplicate.
+    private const int SqliteUniqueConstraintErrorCode = 2067;
 
     public Task<bool> TextExistsAsync(Guid ownerId, string normalizedText, CancellationToken cancellationToken) =>
         dbContext.Set<Requirement>().AnyAsync(
@@ -24,7 +25,7 @@ public sealed class EfRequirementRepository(SiftDbContext dbContext) : IRequirem
             await dbContext.SaveChangesAsync(cancellationToken);
             return true;
         }
-        catch (DbUpdateException exception) when (exception.InnerException is SqliteException { SqliteErrorCode: SqliteConstraintErrorCode })
+        catch (DbUpdateException exception) when (exception.InnerException is SqliteException { SqliteExtendedErrorCode: SqliteUniqueConstraintErrorCode })
         {
             dbContext.Entry(requirement).State = EntityState.Detached;
             return false;

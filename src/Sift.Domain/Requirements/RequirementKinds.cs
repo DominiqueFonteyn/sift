@@ -23,6 +23,11 @@ public static class RequirementKinds
         }
     }
 
+    public static RequirementKind Parse(string value) =>
+        TryParse(value, out var kind)
+            ? kind
+            : throw new FormatException($"Unknown requirement kind '{value}'.");
+
     public static string ToName(RequirementKind kind) => kind switch
     {
         RequirementKind.MustHave => MustHave,
