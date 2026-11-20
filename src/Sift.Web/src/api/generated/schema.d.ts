@@ -222,6 +222,13 @@ export interface components {
             /** @description Name of the bureau. Must contain at least one non-whitespace character; a name made only of whitespace is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. */
             name: string;
         };
+        /** @description The details needed to add a job requirement. The owner is always the signed-in user; any owner supplied is ignored. */
+        CreateRequirementRequest: {
+            /** @description Free text of the requirement. Must contain at least one non-whitespace character; whitespace-only text is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. Unique per user, compared case-insensitively after trimming; a duplicate is rejected with 409. */
+            text: string;
+            /** @description Whether the requirement is a must-have or a nice-to-have. Required; any other value is rejected with 400. */
+            kind: components["schemas"]["RequirementKind"];
+        };
         /** @description The vacancy to paste. The owner is always the signed-in user; any owner, id or creation time supplied is ignored. */
         CreateVacancyRequest: {
             /** @description Job title. Must contain at least one non-whitespace character. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. */
@@ -230,12 +237,6 @@ export interface components {
             company: string;
             /** @description The pasted vacancy text. Must contain at least one non-whitespace character. At most 20,000 characters, counted as sent in UTF-16 code units (JavaScript string length), with no trimming before counting; stored exactly as sent. */
             rawText: string;
-        /** @description The details needed to add a job requirement. The owner is always the signed-in user; any owner supplied is ignored. */
-        CreateRequirementRequest: {
-            /** @description Free text of the requirement. Must contain at least one non-whitespace character; whitespace-only text is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. Unique per user, compared case-insensitively after trimming; a duplicate is rejected with 409. */
-            text: string;
-            /** @description Whether the requirement is a must-have or a nice-to-have. Required; any other value is rejected with 400. */
-            kind: components["schemas"]["RequirementKind"];
         };
         /** @description The account of the signed-in user. */
         CurrentUser: {

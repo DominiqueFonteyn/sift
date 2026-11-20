@@ -536,6 +536,22 @@ components:
           pattern: \S
           description: Name of the bureau. Must contain at least one non-whitespace character; a name made only of whitespace is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored.
       description: The details needed to add a bureau. The owner is always the signed-in user; any owner supplied is ignored.
+    CreateRequirementRequest:
+      type: object
+      required:
+        - text
+        - kind
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 200
+          pattern: \S
+          description: Free text of the requirement. Must contain at least one non-whitespace character; whitespace-only text is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. Unique per user, compared case-insensitively after trimming; a duplicate is rejected with 409.
+        kind:
+          $ref: '#/components/schemas/RequirementKind'
+          description: Whether the requirement is a must-have or a nice-to-have. Required; any other value is rejected with 400.
+      description: The details needed to add a job requirement. The owner is always the signed-in user; any owner supplied is ignored.
     CreateVacancyRequest:
       type: object
       required:
@@ -544,13 +560,6 @@ components:
         - rawText
       properties:
         title:
-    CreateRequirementRequest:
-      type: object
-      required:
-        - text
-        - kind
-      properties:
-        text:
           type: string
           minLength: 1
           maxLength: 200
@@ -569,11 +578,6 @@ components:
           pattern: \S
           description: The pasted vacancy text. Must contain at least one non-whitespace character. At most 20,000 characters, counted as sent in UTF-16 code units (JavaScript string length), with no trimming before counting; stored exactly as sent.
       description: The vacancy to paste. The owner is always the signed-in user; any owner, id or creation time supplied is ignored.
-          description: Free text of the requirement. Must contain at least one non-whitespace character; whitespace-only text is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. Unique per user, compared case-insensitively after trimming; a duplicate is rejected with 409.
-        kind:
-          $ref: '#/components/schemas/RequirementKind'
-          description: Whether the requirement is a must-have or a nice-to-have. Required; any other value is rejected with 400.
-      description: The details needed to add a job requirement. The owner is always the signed-in user; any owner supplied is ignored.
     CurrentUser:
       type: object
       required:
