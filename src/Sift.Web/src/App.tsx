@@ -4,6 +4,19 @@ import { RegisterForm } from './identity/RegisterForm';
 import { SignedIn } from './identity/SignedIn';
 import { useSession } from './identity/useSession';
 import { ResumeEditor } from './resume/ResumeEditor';
+import { NewVacancyPage } from './vacancies/NewVacancyPage';
+import { useVacancyView } from './vacancies/useVacancyView';
+import { VacancyList } from './vacancies/VacancyList';
+
+function Vacancies() {
+  const { view, show } = useVacancyView();
+
+  return view === 'new' ? (
+    <NewVacancyPage onSaved={() => show('list')} onCancel={() => show('list')} />
+  ) : (
+    <VacancyList onPaste={() => show('new')} />
+  );
+}
 
 export function App() {
   const health = useHealth();
@@ -32,6 +45,7 @@ export function App() {
       {session ? (
         <>
           <SignedIn />
+          <Vacancies />
           <ResumeEditor />
         </>
       ) : (
