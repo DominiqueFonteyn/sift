@@ -24,7 +24,7 @@ public static class RecruiterEndpoints
                 }
 
                 var result = await handler.HandleAsync(
-                    new CreateRecruiterCommand(userId, request.Name, request.Email, request.Phone, request.LinkedInUrl),
+                    new CreateRecruiterCommand(userId, request.Name, request.Email, request.Phone, request.LinkedInUrl, request.BureauId),
                     cancellationToken);
 
                 return result switch
@@ -36,9 +36,11 @@ public static class RecruiterEndpoints
                             created.Recruiter.Email,
                             created.Recruiter.Phone,
                             created.Recruiter.LinkedInUrl,
-                            created.Recruiter.CreatedAt),
+                            created.Recruiter.CreatedAt,
+                            created.Bureau is null ? null : new RecruiterBureauResponse(created.Bureau.Id, created.Bureau.Name)),
                         statusCode: StatusCodes.Status201Created),
                     CreateRecruiterResult.Invalid invalid => ProblemResults.Validation(invalid.Errors),
+                    CreateRecruiterResult.BureauNotFound => ProblemResults.NotFound(),
                     _ => throw new InvalidOperationException($"Unhandled result {result.GetType().Name}.")
                 };
             })
@@ -71,7 +73,8 @@ public static class RecruiterEndpoints
                             recruiter.Email,
                             recruiter.Phone,
                             recruiter.LinkedInUrl,
-                            recruiter.CreatedAt))
+                            recruiter.CreatedAt,
+                            recruiter.Bureau is null ? null : new RecruiterBureauResponse(recruiter.Bureau.Id, recruiter.Bureau.Name)))
                         .ToList(),
                     recruiters.Total,
                     pageRequest.Page,

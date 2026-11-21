@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Sift.Domain.Bureaus;
 using Sift.Domain.Identity;
 using Sift.Domain.Recruiters;
 
@@ -23,5 +24,9 @@ public sealed class RecruiterConfiguration : IEntityTypeConfiguration<Recruiter>
 
         builder.HasOne<User>().WithMany().HasForeignKey(recruiter => recruiter.OwnerId).IsRequired().OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(recruiter => recruiter.OwnerId);
+
+        // Restrict: deleting a bureau that still has recruiters is a separate story (FR-2.3).
+        builder.HasOne<Bureau>().WithMany().HasForeignKey(recruiter => recruiter.BureauId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(recruiter => recruiter.BureauId);
     }
 }
