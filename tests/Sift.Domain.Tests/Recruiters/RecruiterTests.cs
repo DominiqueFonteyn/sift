@@ -111,6 +111,28 @@ public sealed class RecruiterTests
     }
 
     [Fact]
+    public void Has_no_bureau_unless_one_is_given()
+    {
+        Assert.Null(Recruiter.Create(Guid.NewGuid(), Guid.NewGuid(), "Jane", null, null, null, Now).BureauId);
+    }
+
+    [Fact]
+    public void Links_to_the_given_bureau()
+    {
+        var bureauId = Guid.NewGuid();
+
+        var recruiter = Recruiter.Create(Guid.NewGuid(), Guid.NewGuid(), "Jane", null, null, null, Now, bureauId);
+
+        Assert.Equal(bureauId, recruiter.BureauId);
+    }
+
+    [Fact]
+    public void Refuses_an_empty_bureau_id()
+    {
+        Assert.Throws<ArgumentException>(() => Recruiter.Create(Guid.NewGuid(), Guid.NewGuid(), "Jane", null, null, null, Now, Guid.Empty));
+    }
+
+    [Fact]
     public void Reports_every_invalid_field_at_once()
     {
         var errors = Recruiter.Validate("", "nope", new string('1', 51), "ftp://x");
