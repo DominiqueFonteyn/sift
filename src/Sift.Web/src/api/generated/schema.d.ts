@@ -259,7 +259,7 @@ export interface components {
         CreateBureauRequest: {
             /** @description Name of the bureau. Must contain at least one non-whitespace character; a name made only of whitespace is rejected with 400. At most 200 characters, counted as sent; surrounding whitespace is trimmed when stored. */
             name: string;
-            /** @description Website of the bureau. Optional; when given it must be an absolute http or https URL of at most 2048 characters. An empty or whitespace-only value is treated as not given; surrounding whitespace is trimmed when stored. */
+            /** @description Website of the bureau. Optional; when given it must be an absolute http or https URL of at most 2048 characters, counted as sent. An empty or whitespace-only value is treated as not given; surrounding whitespace is trimmed when stored. */
             website?: string;
         };
         /** @description The details needed to add a recruiter. The owner is always the signed-in user; any owner supplied is ignored. */
