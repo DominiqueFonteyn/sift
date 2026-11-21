@@ -23,6 +23,19 @@ model CreateRecruiterRequest {
   @doc("LinkedIn profile URL. Optional; when given it must be an absolute http or https URL of at most 2048 characters. An empty or whitespace-only value is treated as not given.")
   @maxLength(2048)
   linkedInUrl?: string;
+
+  @doc("Identifier of one of the signed-in user's bureaus to link the recruiter to. Optional; when given it must be a well-formed UUID, otherwise 400 with an entry under errors.bureauId. An empty or whitespace-only value is treated as not given. A bureau that does not exist or is owned by someone else is rejected with 404, indistinguishably.")
+  bureauId?: string;
+}
+
+@doc("The bureau a recruiter is linked to.")
+model RecruiterBureau {
+  @doc("Identifier of the bureau.")
+  @format("uuid")
+  id: string;
+
+  @doc("Name of the bureau.")
+  name: string;
 }
 
 @doc("A recruiter owned by the signed-in user.")
@@ -42,6 +55,9 @@ model Recruiter {
 
   @doc("LinkedIn profile URL, when one was given.")
   linkedInUrl?: string;
+
+  @doc("The bureau the recruiter is linked to; absent when the recruiter has no bureau.")
+  bureau?: RecruiterBureau;
 
   @doc("When the recruiter was created, in UTC.")
   createdAt: utcDateTime;
@@ -74,7 +90,7 @@ interface Recruiters {
   create(@body request: CreateRecruiterRequest): {
     @statusCode _: 201;
     @body body: Recruiter;
-  } | BadRequestProblem | UnauthorizedProblem;
+  } | BadRequestProblem | UnauthorizedProblem | NotFoundProblem;
 
   @doc("List only the signed-in user's recruiters, one page at a time. An out-of-range page or page size is rejected with 400.")
   @get
