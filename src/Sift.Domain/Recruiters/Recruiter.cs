@@ -13,6 +13,7 @@ public sealed class Recruiter
     public const string EmailField = "email";
     public const string PhoneField = "phone";
     public const string LinkedInUrlField = "linkedInUrl";
+    public const string BureauIdField = "bureauId";
 
     // For persistence only.
     private Recruiter()
@@ -20,10 +21,11 @@ public sealed class Recruiter
         Name = null!;
     }
 
-    private Recruiter(Guid id, Guid ownerId, string name, string? email, string? phone, string? linkedInUrl, DateTimeOffset createdAt)
+    private Recruiter(Guid id, Guid ownerId, string name, string? email, string? phone, string? linkedInUrl, Guid? bureauId, DateTimeOffset createdAt)
     {
         Id = id;
         OwnerId = ownerId;
+        BureauId = bureauId;
         Name = name;
         Email = email;
         Phone = phone;
@@ -43,6 +45,9 @@ public sealed class Recruiter
     public string? Phone { get; private set; }
 
     public string? LinkedInUrl { get; private set; }
+
+    // Null means freelance or in-house. Ownership of the bureau is checked by the use case before this is set.
+    public Guid? BureauId { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -87,8 +92,14 @@ public sealed class Recruiter
         string? email,
         string? phone,
         string? linkedInUrl,
-        DateTimeOffset createdAt)
+        DateTimeOffset createdAt,
+        Guid? bureauId = null)
     {
+        if (bureauId == Guid.Empty)
+        {
+            throw new ArgumentException("A bureau link needs a real bureau identifier.", nameof(bureauId));
+        }
+
         if (id == Guid.Empty)
         {
             throw new ArgumentException("A recruiter needs an identifier.", nameof(id));
@@ -105,7 +116,7 @@ public sealed class Recruiter
             throw new ArgumentException(string.Join(" ", errors.Values.SelectMany(messages => messages)), nameof(name));
         }
 
-        return new Recruiter(id, ownerId, name.Trim(), Normalise(email), Normalise(phone), Normalise(linkedInUrl), createdAt.ToUniversalTime());
+        return new Recruiter(id, ownerId, name.Trim(), Normalise(email), Normalise(phone), Normalise(linkedInUrl), bureauId, createdAt.ToUniversalTime());
     }
 
     private static bool IsBlank(string? value) => string.IsNullOrWhiteSpace(value);

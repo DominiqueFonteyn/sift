@@ -77,6 +77,9 @@ namespace Sift.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("BureauId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -104,6 +107,8 @@ namespace Sift.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BureauId");
 
                     b.HasIndex("OwnerId");
 
@@ -209,6 +214,11 @@ namespace Sift.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Sift.Domain.Recruiters.Recruiter", b =>
                 {
+                    b.HasOne("Sift.Domain.Bureaus.Bureau", null)
+                        .WithMany()
+                        .HasForeignKey("BureauId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Sift.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("OwnerId")
