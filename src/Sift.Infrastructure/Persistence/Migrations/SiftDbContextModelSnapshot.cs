@@ -36,6 +36,10 @@ namespace Sift.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Website")
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerId");

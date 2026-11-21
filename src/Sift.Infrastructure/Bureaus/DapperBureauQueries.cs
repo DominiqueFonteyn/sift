@@ -8,7 +8,7 @@ namespace Sift.Infrastructure.Bureaus;
 
 public sealed class DapperBureauQueries(ISiftConnectionFactory connectionFactory) : IBureauQueries
 {
-    private sealed record Row(string Id, string Name, string CreatedAt);
+    private sealed record Row(string Id, string Name, string? Website, string CreatedAt);
 
     public async Task<PagedResult<BureauReadModel>> ListAsync(Guid ownerId, PageRequest page, CancellationToken cancellationToken)
     {
@@ -17,7 +17,7 @@ public sealed class DapperBureauQueries(ISiftConnectionFactory connectionFactory
         var command = new CommandDefinition(
             """
             select count(*) from Bureaus where OwnerId = @OwnerId;
-            select Id, Name, CreatedAt from Bureaus where OwnerId = @OwnerId order by CreatedAt, Id limit @Limit offset @Offset;
+            select Id, Name, Website, CreatedAt from Bureaus where OwnerId = @OwnerId order by CreatedAt, Id limit @Limit offset @Offset;
             """,
             new { OwnerId = ownerId, Limit = page.PageSize, Offset = page.Offset },
             cancellationToken: cancellationToken);
@@ -34,7 +34,7 @@ public sealed class DapperBureauQueries(ISiftConnectionFactory connectionFactory
         await using var connection = await connectionFactory.OpenAsync(cancellationToken);
 
         var command = new CommandDefinition(
-            "select Id, Name, CreatedAt from Bureaus where Id = @Id and OwnerId = @OwnerId;",
+            "select Id, Name, Website, CreatedAt from Bureaus where Id = @Id and OwnerId = @OwnerId;",
             new { Id = bureauId, OwnerId = ownerId },
             cancellationToken: cancellationToken);
 
@@ -43,5 +43,5 @@ public sealed class DapperBureauQueries(ISiftConnectionFactory connectionFactory
         return row is null ? null : ToReadModel(row);
     }
 
-    private static BureauReadModel ToReadModel(Row row) => new(Guid.Parse(row.Id), row.Name, DateTimeOffset.Parse(row.CreatedAt, CultureInfo.InvariantCulture));
+    private static BureauReadModel ToReadModel(Row row) => new(Guid.Parse(row.Id), row.Name, row.Website, DateTimeOffset.Parse(row.CreatedAt, CultureInfo.InvariantCulture));
 }
