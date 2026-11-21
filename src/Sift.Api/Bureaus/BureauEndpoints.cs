@@ -23,12 +23,12 @@ public static class BureauEndpoints
                     return ProblemResults.InvalidToken();
                 }
 
-                var result = await handler.HandleAsync(new CreateBureauCommand(userId, request.Name), cancellationToken);
+                var result = await handler.HandleAsync(new CreateBureauCommand(userId, request.Name, request.Website), cancellationToken);
 
                 return result switch
                 {
                     CreateBureauResult.Created created => Results.Json(
-                        new BureauResponse(created.Bureau.Id, created.Bureau.Name, created.Bureau.CreatedAt),
+                        new BureauResponse(created.Bureau.Id, created.Bureau.Name, created.Bureau.Website, created.Bureau.CreatedAt),
                         statusCode: StatusCodes.Status201Created),
                     CreateBureauResult.Invalid invalid => ProblemResults.Validation(invalid.Errors),
                     _ => throw new InvalidOperationException($"Unhandled result {result.GetType().Name}.")
@@ -56,7 +56,7 @@ public static class BureauEndpoints
                 var bureaus = await queries.ListAsync(userId, pageRequest, cancellationToken);
 
                 return Results.Ok(new BureauPageResponse(
-                    bureaus.Items.Select(bureau => new BureauResponse(bureau.Id, bureau.Name, bureau.CreatedAt)).ToList(),
+                    bureaus.Items.Select(bureau => new BureauResponse(bureau.Id, bureau.Name, bureau.Website, bureau.CreatedAt)).ToList(),
                     bureaus.Total,
                     pageRequest.Page,
                     pageRequest.PageSize));
@@ -84,7 +84,7 @@ public static class BureauEndpoints
 
                 return bureau is null
                     ? ProblemResults.NotFound()
-                    : Results.Ok(new BureauResponse(bureau.Id, bureau.Name, bureau.CreatedAt));
+                    : Results.Ok(new BureauResponse(bureau.Id, bureau.Name, bureau.Website, bureau.CreatedAt));
             })
             .WithName("Bureaus_get");
 

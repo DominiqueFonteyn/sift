@@ -15,6 +15,7 @@ public sealed class BureauConfiguration : IEntityTypeConfiguration<Bureau>
         builder.Property(bureau => bureau.Id).ValueGeneratedNever();
 
         builder.Property(bureau => bureau.Name).HasMaxLength(Bureau.NameMaxLength).IsRequired();
+        builder.Property(bureau => bureau.Website).HasMaxLength(Bureau.WebsiteMaxLength);
         builder.Property(bureau => bureau.CreatedAt).IsRequired();
         builder.Property(bureau => bureau.UpdatedAt).IsRequired();
 

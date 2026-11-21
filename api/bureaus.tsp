@@ -11,6 +11,10 @@ model CreateBureauRequest {
   @maxLength(200)
   @pattern("\\S")
   name: string;
+
+  @doc("Website of the bureau. Optional; when given it must be an absolute http or https URL of at most 2048 characters, counted as sent. An empty or whitespace-only value is treated as not given; surrounding whitespace is trimmed when stored.")
+  @maxLength(2048)
+  website?: string;
 }
 
 @doc("A bureau owned by the signed-in user.")
@@ -21,6 +25,9 @@ model Bureau {
 
   @doc("Name of the bureau.")
   name: string;
+
+  @doc("Website of the bureau, when one was given.")
+  website?: string;
 
   @doc("When the bureau was created, in UTC.")
   createdAt: utcDateTime;

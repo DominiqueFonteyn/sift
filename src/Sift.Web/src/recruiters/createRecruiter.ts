@@ -11,8 +11,8 @@ export type CreateRecruiterOutcome = { ok: true } | { ok: false; fieldErrors: Re
 
 const fields: RecruiterField[] = ['name', 'email', 'phone', 'linkedInUrl'];
 
-function serverFieldErrors(error: unknown): RecruiterFieldErrors {
-  const errors = (error as { errors?: Record<string, string[]> } | undefined)?.errors ?? {};
+function serverFieldErrors(error: Partial<components['schemas']['ValidationProblemDetails']> | undefined): RecruiterFieldErrors {
+  const errors = error?.errors ?? {};
   const result: RecruiterFieldErrors = {};
 
   for (const field of fields) {

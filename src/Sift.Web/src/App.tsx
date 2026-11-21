@@ -1,3 +1,4 @@
+import { BureausSection } from './bureaus/BureausSection';
 import { useHealth } from './health/useHealth';
 import { LoginForm } from './identity/LoginForm';
 import { RegisterForm } from './identity/RegisterForm';
@@ -53,6 +54,7 @@ export function App() {
         <>
           <SignedIn />
           <Vacancies />
+          <BureausSection />
           <RecruitersSection />
           <ResumeEditor />
           <RequirementsEditor />

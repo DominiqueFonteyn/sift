@@ -1,13 +1,14 @@
 import { useCallback } from 'react';
 import { apiClient } from '../api/client';
+import type { components } from '../api/generated/schema';
 import { validateVacancy, type CreateVacancyRequest, type VacancyField, type VacancyFieldErrors } from './vacancyRules';
 
 export type CreateOutcome = { ok: true } | { ok: false; fieldErrors: VacancyFieldErrors; message: string | null };
 
 const fields: VacancyField[] = ['title', 'company', 'rawText'];
 
-function serverFieldErrors(error: unknown): VacancyFieldErrors {
-  const errors = (error as { errors?: Record<string, string[]> } | undefined)?.errors ?? {};
+function serverFieldErrors(error: Partial<components['schemas']['ValidationProblemDetails']> | undefined): VacancyFieldErrors {
+  const errors = error?.errors ?? {};
   const result: VacancyFieldErrors = {};
 
   for (const field of fields) {

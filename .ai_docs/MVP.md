@@ -12,7 +12,7 @@ Everything that does not serve that sentence is deferred.
 | Area                 | In the MVP                                                                                                  | Deferred                                                                    |
 | -------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | Auth (FR-1)          | Register, login, JWT-protected API, strict ownership checks                                                 | Refresh tokens, password reset, OAuth, email verification                   |
-| Bureaus (FR-2)       | Create + list + view, name required                                                                         | Edit/delete rules, uniqueness enforcement, address                          |
+| Bureaus (FR-2)       | Create + list + view, name required, optional website                                                       | Edit/delete rules, uniqueness enforcement, address, notes                   |
 | Recruiters (FR-3)    | Create + list, optional link to one bureau                                                                  | Filtering, vacancies-per-recruiter view                                     |
 | Vacancies (FR-4)     | Create by **pasting text**, title + company + raw text, list, view, delete, optional recruiter link         | File upload & parsing, status pipeline, search/filter, archiving            |
 | Resumes (FR-5)       | **One** resume per user, authored as plain text in the app                                                  | Multiple resumes, document upload/parsing, structured sections, duplication |
