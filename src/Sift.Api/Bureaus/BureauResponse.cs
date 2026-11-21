@@ -8,4 +8,3 @@ public sealed record BureauResponse(
     string Name,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Website,
     DateTimeOffset CreatedAt);
-
