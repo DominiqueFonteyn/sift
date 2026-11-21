@@ -11,8 +11,8 @@ export type CreateBureauOutcome = { ok: true } | { ok: false; fieldErrors: Burea
 
 const fields: BureauField[] = ['name', 'website'];
 
-function serverFieldErrors(error: unknown): BureauFieldErrors {
-  const errors = (error as { errors?: Record<string, string[]> } | undefined)?.errors ?? {};
+function serverFieldErrors(error: Partial<components['schemas']['ValidationProblemDetails']> | undefined): BureauFieldErrors {
+  const errors = error?.errors ?? {};
   const result: BureauFieldErrors = {};
 
   for (const field of fields) {
