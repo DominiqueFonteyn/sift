@@ -3,13 +3,13 @@ import type { components } from '../api/generated/schema';
 
 export type CreateRecruiterRequest = components['schemas']['CreateRecruiterRequest'];
 
-export type RecruiterField = 'name' | 'email' | 'phone' | 'linkedInUrl';
+export type RecruiterField = 'name' | 'email' | 'phone' | 'linkedInUrl' | 'bureauId';
 
 export type RecruiterFieldErrors = Partial<Record<RecruiterField, string>>;
 
 export type CreateRecruiterOutcome = { ok: true } | { ok: false; fieldErrors: RecruiterFieldErrors; message: string | null };
 
-const fields: RecruiterField[] = ['name', 'email', 'phone', 'linkedInUrl'];
+const fields: RecruiterField[] = ['name', 'email', 'phone', 'linkedInUrl', 'bureauId'];
 
 function serverFieldErrors(error: Partial<components['schemas']['ValidationProblemDetails']> | undefined): RecruiterFieldErrors {
   const errors = error?.errors ?? {};
@@ -26,9 +26,14 @@ function serverFieldErrors(error: Partial<components['schemas']['ValidationProbl
 }
 
 // Validation lives on the server only, so the form can never disagree with the API.
+// An empty bureau choice ("No bureau") is left out, so the API stores no link.
 export async function createRecruiter(draft: CreateRecruiterRequest): Promise<CreateRecruiterOutcome> {
+  const { bureauId, ...rest } = draft;
+
   try {
-    const { data, error } = await apiClient.POST('/recruiters', { body: draft });
+    const { data, error } = await apiClient.POST('/recruiters', {
+      body: bureauId?.trim() ? { ...rest, bureauId } : rest,
+    });
 
     if (data) {
       return { ok: true };
