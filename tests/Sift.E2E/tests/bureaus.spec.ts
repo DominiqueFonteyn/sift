@@ -70,17 +70,32 @@ test('a user opens a bureau and sees its name and website', async ({ page, reque
   await expect(section(page).getByTestId('bureau-row')).toHaveCount(1);
 });
 
-test('validation errors are shown next to the fields and nothing is added', async ({ page, request }) => {
+test('an empty name shows a name error and nothing is added', async ({ page, request }) => {
   const email = uniqueEmail();
   await registerViaApi(request, email);
   await logIn(page, email);
 
-  await form(page).getByLabel('Website').fill('acme.example');
   await form(page).getByRole('button', { name: 'Add bureau' }).click();
 
   await expect(form(page).getByTestId('bureau-name-error')).toBeVisible();
-  await expect(form(page).getByTestId('bureau-website-error')).toBeVisible();
+  await expect(form(page).getByTestId('bureau-website-error')).toHaveCount(0);
   await expect(form(page).getByLabel('Name')).toHaveAttribute('aria-invalid', 'true');
+  await expect(section(page).getByTestId('bureau-row')).toHaveCount(0);
+  await expect(section(page).getByTestId('bureaus-empty')).toBeVisible();
+});
+
+test('an invalid website shows a website error and nothing is added', async ({ page, request }) => {
+  const email = uniqueEmail();
+  await registerViaApi(request, email);
+  await logIn(page, email);
+
+  await form(page).getByLabel('Name').fill('Acme Recruitment');
+  await form(page).getByLabel('Website').fill('acme.example');
+  await form(page).getByRole('button', { name: 'Add bureau' }).click();
+
+  await expect(form(page).getByTestId('bureau-website-error')).toBeVisible();
+  await expect(form(page).getByTestId('bureau-name-error')).toHaveCount(0);
+  await expect(form(page).getByLabel('Website')).toHaveAttribute('aria-invalid', 'true');
   await expect(section(page).getByTestId('bureau-row')).toHaveCount(0);
   await expect(section(page).getByTestId('bureaus-empty')).toBeVisible();
 });
