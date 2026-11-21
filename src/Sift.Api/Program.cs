@@ -65,7 +65,7 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
 {
     using var scope = app.Services.CreateScope();
     await scope.ServiceProvider.GetRequiredService<SiftDbContext>().Database.MigrateAsync();

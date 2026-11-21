@@ -53,3 +53,16 @@ yarn install
 yarn playwright install --with-deps chromium
 yarn test
 ```
+
+## Running in Docker
+
+`docker-compose.yml` runs two containers: `api` (ASP.NET Core, SQLite in the `sift-data` volume,
+migrations applied on startup via `Database__MigrateOnStartup=true`) and `web` (nginx serving the
+built React app and proxying `/api/*` to the API, so there is a single origin and no CORS setup).
+
+```bash
+cp .env.example .env                       # then set JWT_SIGNING_KEY (32+ chars): openssl rand -hex 32
+docker compose up -d --build               # http://localhost:8080 (change with SIFT_PORT in .env)
+docker compose logs -f api
+docker compose down                        # add -v to also delete the database volume
+```
