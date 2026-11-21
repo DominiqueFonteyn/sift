@@ -272,6 +272,8 @@ export interface components {
             phone?: string;
             /** @description LinkedIn profile URL. Optional; when given it must be an absolute http or https URL of at most 2048 characters. An empty or whitespace-only value is treated as not given. */
             linkedInUrl?: string;
+            /** @description Identifier of one of the signed-in user's bureaus to link the recruiter to. Optional; when given it must be a well-formed UUID, otherwise 400 with an entry under errors.bureauId. An empty or whitespace-only value is treated as not given. A bureau that does not exist or is owned by someone else is rejected with 404, indistinguishably. */
+            bureauId?: string;
         };
         /** @description The details needed to add a job requirement. The owner is always the signed-in user; any owner supplied is ignored. */
         CreateRequirementRequest: {
@@ -370,11 +372,23 @@ export interface components {
             phone?: string;
             /** @description LinkedIn profile URL, when one was given. */
             linkedInUrl?: string;
+            /** @description The bureau the recruiter is linked to; absent when the recruiter has no bureau. */
+            bureau?: components["schemas"]["RecruiterBureau"];
             /**
              * Format: date-time
              * @description When the recruiter was created, in UTC.
              */
             createdAt: string;
+        };
+        /** @description The bureau a recruiter is linked to. */
+        RecruiterBureau: {
+            /**
+             * Format: uuid
+             * @description Identifier of the bureau.
+             */
+            id: string;
+            /** @description Name of the bureau. */
+            name: string;
         };
         /** @description One page of the signed-in user's recruiters, oldest first. */
         RecruiterPage: {
@@ -956,6 +970,15 @@ export interface operations {
             };
             /** @description The credentials are wrong, or the bearer token is missing, invalid or expired. Never reveals whether an email exists. */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The resource does not exist or is not owned by the signed-in user. The two cases are indistinguishable. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -1,17 +1,18 @@
 import { useState, type FormEvent } from 'react';
 import { createRecruiter, type RecruiterField, type RecruiterFieldErrors } from './createRecruiter';
+import { useBureauChoices } from './useBureauChoices';
 import { recruitersPageSize, useRecruiters } from './useRecruiters';
 
 const inputClass = 'w-full rounded-md border border-slate-300 p-2 text-sm aria-[invalid=true]:border-red-500';
 
-const formFields: { field: RecruiterField; label: string; type: string }[] = [
+const formFields: { field: Exclude<RecruiterField, 'bureauId'>; label: string; type: string }[] = [
   { field: 'name', label: 'Name', type: 'text' },
   { field: 'email', label: 'Email', type: 'text' },
   { field: 'phone', label: 'Phone', type: 'text' },
   { field: 'linkedInUrl', label: 'LinkedIn URL', type: 'text' },
 ];
 
-const emptyDraft: Record<RecruiterField, string> = { name: '', email: '', phone: '', linkedInUrl: '' };
+const emptyDraft: Record<RecruiterField, string> = { name: '', email: '', phone: '', linkedInUrl: '', bureauId: '' };
 
 export function RecruitersSection() {
   const [page, setPage] = useState(1);
@@ -20,6 +21,9 @@ export function RecruitersSection() {
   const [errors, setErrors] = useState<RecruiterFieldErrors>({});
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Bumped when the picker gets focus, so a bureau added moments ago is offered.
+  const [choicesKey, setChoicesKey] = useState(0);
+  const choices = useBureauChoices(choicesKey);
   const state = useRecruiters(page, reloadKey);
   const lastPage = state.kind === 'loaded' ? Math.max(1, Math.ceil(state.total / recruitersPageSize)) : 1;
 
@@ -71,6 +75,38 @@ export function RecruitersSection() {
             )}
           </div>
         ))}
+        <div className="flex flex-col gap-1">
+          <label htmlFor="recruiter-bureauId" className="text-sm font-medium">
+            Bureau
+          </label>
+          <select
+            id="recruiter-bureauId"
+            value={draft.bureauId}
+            onChange={(event) => setDraft({ ...draft, bureauId: event.target.value })}
+            onFocus={() => setChoicesKey((key) => key + 1)}
+            aria-invalid={errors.bureauId !== undefined}
+            aria-describedby={errors.bureauId ? 'recruiter-bureauId-error' : undefined}
+            className={inputClass}
+          >
+            <option value="">No bureau</option>
+            {choices.kind === 'loaded' &&
+              choices.items.map((bureau) => (
+                <option key={bureau.id} value={bureau.id}>
+                  {bureau.name}
+                </option>
+              ))}
+          </select>
+          {choices.kind === 'failed' && (
+            <p data-testid="recruiter-bureau-choices-error" className="text-sm text-red-600">
+              {choices.detail}
+            </p>
+          )}
+          {errors.bureauId && (
+            <p id="recruiter-bureauId-error" role="alert" data-testid="recruiter-bureauId-error" className="text-sm text-red-600">
+              {errors.bureauId}
+            </p>
+          )}
+        </div>
         {message && (
           <p role="alert" data-testid="recruiter-error" className="text-sm text-red-600">
             {message}
@@ -106,6 +142,11 @@ export function RecruitersSection() {
                 <p data-testid="recruiter-name" className="font-medium">
                   {recruiter.name}
                 </p>
+                {recruiter.bureau && (
+                  <p data-testid="recruiter-bureau" className="text-sm text-slate-600">
+                    {recruiter.bureau.name}
+                  </p>
+                )}
                 {recruiter.email && (
                   <p data-testid="recruiter-email" className="text-sm text-slate-600">
                     {recruiter.email}
