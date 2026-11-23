@@ -54,11 +54,13 @@ async function logIn(page: Page, email: string): Promise<void> {
 
 async function registerThroughTheForm(page: Page, email: string): Promise<void> {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Create an account' }).click();
   const form = page.getByRole('region', { name: 'Registration' });
   await form.getByLabel('Email').fill(email);
   await form.getByLabel('Password').fill(password);
   await form.getByRole('button', { name: 'Register' }).click();
   await expect(page.getByTestId('register-success')).toContainText(email);
+  await page.getByRole('button', { name: 'Continue to log in' }).click();
 }
 
 async function logInThroughTheForm(page: Page, email: string): Promise<void> {
@@ -69,7 +71,12 @@ async function logInThroughTheForm(page: Page, email: string): Promise<void> {
   await expect(page.getByTestId('signed-in')).toContainText(email);
 }
 
+async function openNav(page: Page, name: string): Promise<void> {
+  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name }).click();
+}
+
 async function saveResumeThroughTheEditor(page: Page, text: string): Promise<void> {
+  await openNav(page, 'Resume');
   const resume = page.getByRole('region', { name: 'Resume' });
   await resume.getByLabel('Resume text').fill(text);
   await resume.getByRole('button', { name: 'Save resume' }).click();
@@ -77,6 +84,7 @@ async function saveResumeThroughTheEditor(page: Page, text: string): Promise<voi
 }
 
 async function addRequirementThroughTheEditor(page: Page, text: string, kind: RequirementKind): Promise<void> {
+  await openNav(page, 'Requirements');
   const section = page.getByRole('region', { name: 'Requirements' });
   await section.getByLabel('Requirement', { exact: true }).fill(text);
   await section.getByLabel('Kind').selectOption(kind);
@@ -85,6 +93,7 @@ async function addRequirementThroughTheEditor(page: Page, text: string, kind: Re
 }
 
 async function pasteVacancyThroughTheForm(page: Page, title: string, rawText: string, expectedRows: number): Promise<void> {
+  await openNav(page, 'Vacancies');
   const list = page.getByRole('region', { name: 'Vacancies' });
   await list.getByRole('link', { name: 'Paste a vacancy' }).click();
   const form = page.getByRole('region', { name: 'New vacancy' });

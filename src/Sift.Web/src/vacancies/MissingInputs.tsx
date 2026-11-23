@@ -1,25 +1,12 @@
-import type { MouseEvent } from 'react';
 import type { components } from '../api/generated/schema';
+import { requirementsHash, resumeHash } from '../navigation/routes';
 
 type MatchInput = components['schemas']['MatchInput'];
 
-export const missingInputs: Record<MatchInput, { label: string; target: string; linkText: string }> = {
-  resume: { label: 'resume', target: 'resume', linkText: 'my resume' },
-  requirements: { label: 'requirements', target: 'requirements', linkText: 'my requirements' },
+export const missingInputs: Record<MatchInput, { label: string; hash: string; linkText: string }> = {
+  resume: { label: 'resume', hash: resumeHash, linkText: 'my resume' },
+  requirements: { label: 'requirements', hash: requirementsHash, linkText: 'my requirements' },
 };
-
-// The resume and requirements editors sit on the same page, so the links scroll to them
-// instead of changing the route, which would leave the vacancy.
-function goTo(target: string) {
-  return (event: MouseEvent<HTMLAnchorElement>) => {
-    const section = document.getElementById(target);
-    if (section) {
-      event.preventDefault();
-      section.scrollIntoView({ block: 'start' });
-      section.focus({ preventScroll: true });
-    }
-  };
-}
 
 type MissingInputLinksProps = {
   inputs: MatchInput[];
@@ -28,16 +15,15 @@ type MissingInputLinksProps = {
 
 export function MissingInputLinks({ inputs, testIdPrefix }: MissingInputLinksProps) {
   return (
-    <ul className="mt-2 flex flex-col gap-1">
+    <ul className="mt-2 flex flex-wrap gap-3">
       {inputs.map((input) => (
         <li key={input}>
           <a
-            href={`#${missingInputs[input].target}`}
+            href={missingInputs[input].hash}
             data-testid={`${testIdPrefix}-${input}`}
-            onClick={goTo(missingInputs[input].target)}
-            className="font-medium underline"
+            className="inline-flex items-center rounded-md bg-amber-900/10 px-2.5 py-1 text-xs font-medium text-amber-950 transition-colors hover:bg-amber-900/20"
           >
-            Add {missingInputs[input].linkText}
+            Add {missingInputs[input].linkText} →
           </a>
         </li>
       ))}

@@ -48,79 +48,92 @@ export function NewVacancyPage({ onSaved, onCancel }: NewVacancyPageProps) {
   }
 
   return (
-    <section
-      aria-label="New vacancy"
-      className="w-full max-w-2xl rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm"
-    >
-      <h2 className="text-lg font-semibold">Paste a vacancy</h2>
-      <form onSubmit={onSubmit} noValidate className="mt-2 flex flex-col gap-2">
-        <label htmlFor="vacancy-title" className="text-sm font-medium">
-          Title
-        </label>
-        <input
-          id="vacancy-title"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          aria-invalid={errors.title !== undefined}
-          aria-describedby={describedBy('title')}
-          className={inputClass}
-        />
-        {fieldError('title')}
-        <p className="text-xs text-slate-500">Up to {titleMaxLength} characters.</p>
-
-        <label htmlFor="vacancy-company" className="text-sm font-medium">
-          Company
-        </label>
-        <input
-          id="vacancy-company"
-          value={company}
-          onChange={(event) => setCompany(event.target.value)}
-          aria-invalid={errors.company !== undefined}
-          aria-describedby={describedBy('company')}
-          className={inputClass}
-        />
-        {fieldError('company')}
-        <p className="text-xs text-slate-500">Up to {companyMaxLength} characters.</p>
-
-        <label htmlFor="vacancy-text" className="text-sm font-medium">
-          Vacancy text
-        </label>
-        <textarea
-          id="vacancy-text"
-          value={rawText}
-          onChange={(event) => setRawText(event.target.value)}
-          aria-invalid={errors.rawText !== undefined}
-          aria-describedby={describedBy('rawText')}
-          rows={14}
-          className={`${inputClass} font-mono`}
-        />
-        {fieldError('rawText')}
-        <p className="text-xs text-slate-500">
-          {rawText.length.toLocaleString('en-US')} / {rawTextMaxLength.toLocaleString('en-US')} characters
+    <section aria-label="New vacancy" className="flex flex-col gap-6">
+      <header>
+        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Paste a vacancy</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Drop in a job description to score it immediately against your requirements.
         </p>
+      </header>
 
-        {message && (
-          <p role="alert" data-testid="vacancy-error" className="text-sm text-red-600">
-            {message}
-          </p>
-        )}
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
-          >
-            Save vacancy
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-100"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+        <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="vacancy-title" className="text-sm font-medium text-slate-700">
+                Title
+              </label>
+              <input
+                id="vacancy-title"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                aria-invalid={errors.title !== undefined}
+                aria-describedby={describedBy('title')}
+                className={inputClass}
+              />
+              {fieldError('title')}
+              <p className="text-xs text-slate-500">Up to {titleMaxLength} characters.</p>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label htmlFor="vacancy-company" className="text-sm font-medium text-slate-700">
+                Company
+              </label>
+              <input
+                id="vacancy-company"
+                value={company}
+                onChange={(event) => setCompany(event.target.value)}
+                aria-invalid={errors.company !== undefined}
+                aria-describedby={describedBy('company')}
+                className={inputClass}
+              />
+              {fieldError('company')}
+              <p className="text-xs text-slate-500">Up to {companyMaxLength} characters.</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="vacancy-text" className="text-sm font-medium text-slate-700">
+              Vacancy text
+            </label>
+            <textarea
+              id="vacancy-text"
+              value={rawText}
+              onChange={(event) => setRawText(event.target.value)}
+              aria-invalid={errors.rawText !== undefined}
+              aria-describedby={describedBy('rawText')}
+              rows={14}
+              className={`${inputClass} font-mono`}
+            />
+            {fieldError('rawText')}
+            <p className="text-xs text-slate-500">
+              {rawText.length.toLocaleString('en-US')} / {rawTextMaxLength.toLocaleString('en-US')} characters
+            </p>
+          </div>
+
+          {message && (
+            <p role="alert" data-testid="vacancy-error" className="text-sm text-red-600">
+              {message}
+            </p>
+          )}
+          <div className="flex gap-2 pt-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:opacity-50"
+            >
+              Save vacancy
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
     </section>
   );
 }

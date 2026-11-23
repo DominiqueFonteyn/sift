@@ -5,15 +5,12 @@ export function SignedIn() {
   const current = useCurrentUser();
 
   return (
-    <section
-      aria-label="Account"
-      className="w-full max-w-sm rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm"
-    >
-      <p data-testid="signed-in" className="text-sm">
+    <section aria-label="Account" className="flex flex-col gap-2">
+      <p data-testid="signed-in" className="truncate text-xs text-slate-600">
         {current.kind === 'loading' && 'Signed in'}
         {current.kind === 'loaded' && (
           <>
-            Signed in as <span className="font-semibold">{current.user.email}</span>
+            Signed in as <span className="font-medium text-slate-900">{current.user.email}</span>
           </>
         )}
         {current.kind === 'failed' && <span className="text-red-600">{current.detail}</span>}
@@ -21,7 +18,7 @@ export function SignedIn() {
       <button
         type="button"
         onClick={clearSession}
-        className="mt-4 rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-100"
+        className="w-full rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
       >
         Log out
       </button>

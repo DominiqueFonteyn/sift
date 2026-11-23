@@ -31,6 +31,7 @@ async function logIn(page: Page, email: string): Promise<void> {
   await form.getByLabel('Password').fill(password);
   await form.getByRole('button', { name: 'Log in' }).click();
   await expect(page.getByTestId('signed-in')).toContainText(email);
+  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Recruiters' }).click();
 }
 
 function section(page: Page) {

@@ -177,14 +177,16 @@ for (const { state, hasResume, hasRequirements, missing } of nothingToScoreAgain
 
     for (const input of missing) {
       const link = page.getByTestId(`match-missing-${input}`);
-      await expect(link).toHaveAttribute('href', `#${input}`);
+      await expect(link).toHaveAttribute('href', `#/${input}`);
 
       await link.click();
 
       const editor = page.getByRole('region', { name: editorRegions[input] });
-      await expect(editor).toBeFocused();
-      await expect(editor).toBeInViewport();
-      await expect(page.getByTestId('vacancy-detail-title')).toBeVisible();
+      await expect(editor).toBeVisible();
+      await expect(page.getByTestId('vacancy-detail-title')).toHaveCount(0);
+
+      await page.goBack();
+      await expect(page.getByTestId('vacancy-detail-title')).toHaveText('Unscored Engineer');
     }
   });
 }

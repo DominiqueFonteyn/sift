@@ -6,20 +6,27 @@ export function ResumeEditor() {
   const { state, save } = useResume();
 
   return (
-    <section
-      id="resume"
-      tabIndex={-1}
-      aria-label="Resume"
-      className="w-full max-w-2xl rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm"
-    >
-      <h2 className="text-lg font-semibold">My resume</h2>
-      {state.kind === 'loading' && <p data-testid="resume-loading">Loading your resume…</p>}
-      {state.kind === 'failed' && (
-        <p data-testid="resume-load-error" className="text-red-600">
-          {state.detail}
+    <section id="resume" tabIndex={-1} aria-label="Resume" className="flex flex-col gap-6">
+      <header>
+        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">My resume</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Keep your latest resume here so Sift can score vacancies against your profile.
         </p>
-      )}
-      {state.kind === 'ready' && <ResumeForm initialText={state.text} updatedAt={state.updatedAt} save={save} />}
+      </header>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+        {state.kind === 'loading' && (
+          <p data-testid="resume-loading" className="text-sm text-slate-500">
+            Loading your resume…
+          </p>
+        )}
+        {state.kind === 'failed' && (
+          <p data-testid="resume-load-error" className="text-sm text-red-600">
+            {state.detail}
+          </p>
+        )}
+        {state.kind === 'ready' && <ResumeForm initialText={state.text} updatedAt={state.updatedAt} save={save} />}
+      </div>
     </section>
   );
 }

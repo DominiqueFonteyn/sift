@@ -19,7 +19,7 @@ export function LoginForm({ sessionExpired }: { sessionExpired: boolean }) {
   return (
     <section
       aria-label="Login"
-      className="w-full max-w-sm rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm"
+      className="w-full rounded-xl border border-slate-200 bg-white p-6 shadow-xs"
     >
       <h2 className="text-lg font-semibold">Log in</h2>
       {sessionExpired && (

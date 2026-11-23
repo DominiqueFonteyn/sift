@@ -7,6 +7,7 @@ function uniqueEmail(): string {
 }
 
 async function submitRegistration(page: Page, email: string, password: string): Promise<void> {
+  await page.getByRole('button', { name: 'Create an account' }).click();
   const form = page.getByRole('region', { name: 'Registration' });
   await form.getByLabel('Email').fill(email);
   await form.getByLabel('Password').fill(password);

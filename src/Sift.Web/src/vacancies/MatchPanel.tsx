@@ -15,7 +15,7 @@ export function MatchPanel({ match }: MatchPanelProps) {
       <section
         aria-label="Score"
         data-testid="match-missing"
-        className="rounded-lg border border-amber-300 bg-amber-50 px-6 py-4 text-sm shadow-sm"
+        className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950"
       >
         <p className="font-medium">
           This vacancy cannot be scored yet. Missing: {match.missingInputs.map((input) => missingInputs[input].label).join(', ')}.
@@ -28,19 +28,33 @@ export function MatchPanel({ match }: MatchPanelProps) {
   const passes = match.score >= passThreshold;
 
   return (
-    <section aria-label="Score" className="rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
-      <p className="text-sm text-slate-600">
-        Score{' '}
-        <span
-          data-testid="vacancy-score"
-          data-passes={passes}
-          className={`text-2xl font-semibold ${passes ? 'text-green-700' : 'text-red-700'}`}
+    <section aria-label="Score" className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Match score</h3>
+          <p className="mt-1 text-xs text-slate-500">
+            {passes ? 'All must-have requirements met.' : 'One or more must-have requirements were not found.'}
+          </p>
+        </div>
+        <div
+          className={`flex items-baseline gap-1 rounded-xl px-4 py-2 ${
+            passes
+              ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/80'
+              : 'bg-red-50 text-red-700 ring-1 ring-red-200/80'
+          }`}
         >
-          {match.score}
-        </span>{' '}
-        <span className="text-slate-500">/ 100</span>
-      </p>
-      <ul aria-label="Requirement verdicts" className="mt-3 flex flex-col divide-y divide-slate-100">
+          <span
+            data-testid="vacancy-score"
+            data-passes={passes}
+            className="text-3xl font-bold leading-none"
+          >
+            {match.score}
+          </span>
+          <span className="text-xs font-medium opacity-75">/ 100</span>
+        </div>
+      </div>
+
+      <ul aria-label="Requirement verdicts" className="mt-2 flex flex-col divide-y divide-slate-100">
         {match.verdicts.map((verdict) => (
           <li
             key={`${verdict.kind}:${verdict.requirement}`}
@@ -48,13 +62,13 @@ export function MatchPanel({ match }: MatchPanelProps) {
             data-requirement={verdict.requirement}
             data-kind={verdict.kind}
             data-verdict={verdict.verdict}
-            className="flex flex-col gap-1 py-2 text-sm"
+            className="flex flex-col gap-1 py-3 text-sm"
           >
-            <div className="flex items-center gap-2">
-              <span className="font-medium">{verdict.requirement}</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-medium text-slate-900">{verdict.requirement}</span>
               <span
                 data-testid="verdict-kind"
-                className={`rounded px-2 py-0.5 text-xs font-medium ${
+                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                   verdict.kind === 'must-have' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
                 }`}
               >
@@ -62,8 +76,8 @@ export function MatchPanel({ match }: MatchPanelProps) {
               </span>
               <span
                 data-testid="verdict-outcome"
-                className={`rounded px-2 py-0.5 text-xs font-medium ${
-                  verdict.verdict === 'met' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  verdict.verdict === 'met' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
                 }`}
               >
                 {verdict.verdict}

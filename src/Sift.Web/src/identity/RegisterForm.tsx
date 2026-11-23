@@ -18,7 +18,11 @@ function FieldMessages({ id, messages }: { id: string; messages?: string[] }) {
   );
 }
 
-export function RegisterForm() {
+type RegisterFormProps = {
+  onSwitchToLogin?: () => void;
+};
+
+export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const { state, register } = useRegister();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,11 +39,20 @@ export function RegisterForm() {
     return (
       <section
         aria-label="Registration"
-        className="w-full max-w-sm rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm"
+        className="w-full rounded-xl border border-slate-200 bg-white p-6 shadow-xs"
       >
         <p data-testid="register-success" className="text-sm text-green-700">
           Account created for <span className="font-semibold">{state.user.email}</span>.
         </p>
+        {onSwitchToLogin && (
+          <button
+            type="button"
+            onClick={onSwitchToLogin}
+            className="mt-4 w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+          >
+            Continue to log in
+          </button>
+        )}
       </section>
     );
   }
@@ -47,7 +60,7 @@ export function RegisterForm() {
   return (
     <section
       aria-label="Registration"
-      className="w-full max-w-sm rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm"
+      className="w-full rounded-xl border border-slate-200 bg-white p-6 shadow-xs"
     >
       <h2 className="text-lg font-semibold">Create an account</h2>
       <form noValidate onSubmit={onSubmit} className="mt-4 flex flex-col gap-4">
